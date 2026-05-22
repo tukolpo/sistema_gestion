@@ -16,6 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenBlacklistView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,15 +30,10 @@ urlpatterns = [
 
 from django.contrib import admin
 from django.urls import path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenBlacklistView,
-)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Tus rutas de la Tarea 2 para el Login:
+    
     path("api/auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/login/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path(

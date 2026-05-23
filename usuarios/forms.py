@@ -10,6 +10,11 @@ class LoginForm(AuthenticationForm):
     Formulario de inicio de sesión personalizado.
     Aplica validaciones de frontend: formato de correo, longitud mínima de contraseña.
     """
+    error_messages = {
+        'invalid_login': 'Credenciales incorrectas. Verifica tu correo y contraseña.',
+        'inactive': 'Esta cuenta está inactiva.',
+    }
+
     username = forms.EmailField(
         label='Correo Electrónico',
         widget=forms.EmailInput(attrs={

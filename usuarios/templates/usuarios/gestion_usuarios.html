@@ -87,7 +87,7 @@
           aria-label="Seleccionar rol para {{ usuario.username }}" id="select-rol-{{ usuario.id }}">
           <option value="">— Sin Rol —</option>
           {% for rol in roles %}
-          <option value="{{ rol.id }}" {% if usuario.rol and usuario.rol.id==rol.id %}selected{% endif %}>
+          <option value="{{ rol.id }}" {% if usuario.rol and usuario.rol.id == rol.id %}selected{% endif %}>
             {{ rol.nombre }}
           </option>
           {% endfor %}

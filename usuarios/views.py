@@ -41,11 +41,8 @@ def vista_login(request):
             messages.success(request, f'¡Bienvenido, {user.first_name or user.username}!')
             return redirect('usuarios:dashboard')
         else:
-            # Subtarea 1.3: Mostrar error visual cuando las credenciales son incorrectas
-            messages.error(
-                request,
-                'Credenciales incorrectas. Verifica tu correo y contraseña.'
-            )
+            # La validación del formulario ya incluye los errores de autenticación
+            pass
 
     context = {
         'form': form,

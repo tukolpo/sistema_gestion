@@ -132,3 +132,8 @@ LOGOUT_REDIRECT_URL = '/'
 
 # ─── Handlers de error personalizados (Subtarea 1.3) ─────────────
 HANDLER403 = 'usuarios.views.vista_sin_permisos'
+
+AUTHENTICATION_BACKENDS = [
+    'usuarios.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]

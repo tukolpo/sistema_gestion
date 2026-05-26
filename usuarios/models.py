@@ -5,7 +5,9 @@ from django.contrib.auth.models import AbstractUser
 
 class Rol(models.Model):
     nombre = models.CharField(max_length=50, unique=True)
-    nivel_jerarquia = models.IntegerField(unique=True)
+    nivel_jerarquia = models.IntegerField(
+        help_text="100=Admin, 50=Gerente, 40=Supervisor, 20=Trabajador, 10=Funcionario",
+    )
     descripcion = models.TextField(blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 

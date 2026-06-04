@@ -16,6 +16,7 @@ from usuarios.constants import (
     NIVEL_ASIGNAR_ROLES,
 )
 from .forms import LoginForm
+from usuarios.security import registrar_login_exitoso
 
 
 def _nivel_usuario(user):
@@ -51,6 +52,7 @@ def vista_login(request):
     if request.method == "POST" and form.is_valid():
         user = form.get_user()
         login(request, user)
+        registrar_login_exitoso(request, user)
 
         if not form.cleaned_data.get("remember_me"):
             request.session.set_expiry(0)

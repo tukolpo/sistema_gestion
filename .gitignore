@@ -1,23 +1,32 @@
-# Entornos virtuales
-   venv/
-   env/
-
-   # Archivos compilados de Python
-   __pycache__/
-   *.pyc
-
-   # Base de datos local (opcional, pero recomendado si cada quien tendrá su propia BD de pruebas)
-   db.sqlite3
-
-   # Archivos de entorno y variables sensibles
-   .env
-*.sqlite3
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-*.pyd
 .Python
-env/
+
+# Entornos virtuales
 venv/
+env/
+venv_old/
+
+# Base de datos local
+*.sqlite3
+db.sqlite3
+
+# Django
+staticfiles/
+media/
+private_media/
+
+# Variables de entorno
 .env
+.env.*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Referencia SQL (opcional: quitar si el equipo versiona solo migraciones)
+# base_de_datos_completa.sql

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Rol, SecurityLog, Usuario
+from .models import Rol, SecurityLog, Usuario, LogAuditoria
 
 
 @admin.register(Rol)
@@ -61,3 +61,30 @@ class SecurityLogAdmin(admin.ModelAdmin):
         if len(obj.user_agent) > 60:
             return f"{obj.user_agent[:60]}…"
         return obj.user_agent
+
+
+@admin.register(LogAuditoria)
+class LogAuditoriaAdmin(admin.ModelAdmin):
+    list_display = ("fecha", "accion", "modelo_afectado", "usuario", "ip_address")
+    list_filter = ("accion", "modelo_afectado", "fecha")
+    search_fields = ("usuario__username", "modelo_afectado", "registro_id")
+    readonly_fields = (
+        "usuario",
+        "accion",
+        "modelo_afectado",
+        "registro_id",
+        "valores_anteriores",
+        "valores_nuevos",
+        "fecha",
+        "ip_address",
+    )
+    date_hierarchy = "fecha"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

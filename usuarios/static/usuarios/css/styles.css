@@ -41,6 +41,9 @@
 
   --transition:   all .25s ease;
   --sidebar-w:    190px;
+
+  /* Alias para compatibilidad con nuevos componentes */
+  --color-primario: #6D0021;
 }
 
 /* ─── Reset ─────────────────────────────────────── */
@@ -676,6 +679,9 @@ body {
 
 /* ─── Botón acción tabla ──────────────────────────── */
 .btn-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 5px 12px;
   border-radius: var(--radius-sm);
   font-size: .78rem;
@@ -683,6 +689,8 @@ body {
   cursor: pointer;
   border: none;
   transition: var(--transition);
+  text-decoration: none;
+  color: #fff;
 }
 
 .btn-guardar {
@@ -692,6 +700,39 @@ body {
 
 .btn-guardar:hover {
   background: var(--color-burdeos-dark);
+}
+
+.btn-editar {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-editar:hover {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-clave {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.btn-clave:hover {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.btn-eliminar {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-eliminar:hover {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 /* ─── Estado vacío de la tabla ────────────────────── */

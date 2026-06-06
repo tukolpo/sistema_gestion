@@ -78,3 +78,37 @@ class SecurityLog(models.Model):
     def __str__(self):
         usuario = self.user.username if self.user else "—"
         return f"{self.get_action_display()} · {usuario} · {self.timestamp:%Y-%m-%d %H:%M}"
+
+
+class LogAuditoria(models.Model):
+    class Accion(models.TextChoices):
+        CREAR = "CREAR", "Creación"
+        EDITAR = "EDITAR", "Edición"
+        ELIMINAR = "ELIMINAR", "Eliminación"
+
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="logs_auditoria",
+    )
+    accion = models.CharField(max_length=10, choices=Accion.choices, db_index=True)
+    modelo_afectado = models.CharField(max_length=100)
+    registro_id = models.CharField(max_length=255)
+    valores_anteriores = models.JSONField(null=True, blank=True)
+    valores_nuevos = models.JSONField(null=True, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True, db_index=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Log de Auditoría"
+        verbose_name_plural = "Logs de Auditoría"
+        ordering = ["-fecha"]
+        indexes = [
+            models.Index(fields=["-fecha", "modelo_afectado"]),
+        ]
+
+    def __str__(self):
+        usuario_str = self.usuario.username if self.usuario else "Sistema"
+        return f"[{self.fecha:%Y-%m-%d %H:%M}] {usuario_str} -> {self.get_accion_display()} {self.modelo_afectado} (ID: {self.registro_id})"

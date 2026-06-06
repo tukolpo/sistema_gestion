@@ -51,6 +51,7 @@ class Trabajador(models.Model):
         ACTIVO = "ACTIVO", "Activo"
         INACTIVO = "INACTIVO", "Inactivo"
 
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     cedula = models.CharField(max_length=15, unique=True)

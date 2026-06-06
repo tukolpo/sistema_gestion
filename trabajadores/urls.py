@@ -20,4 +20,5 @@ urlpatterns = [
         views.descargar_documento,
         name="descargar_documento",
     ),
+    path("perfil-publico/<uuid:trabajador_uuid>/", views.perfil_publico_trabajador, name="perfil_publico"),
 ]

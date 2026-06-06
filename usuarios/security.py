@@ -1,11 +1,7 @@
-# usuarios/security.py
-# Seguridad de sesión, bloqueos de cuenta y utilidades RBAC
 
 from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-
 from usuarios.constants import MAX_INTENTOS_LOGIN, MINUTOS_BLOQUEO_LOGIN, NIVEL_ADMINISTRADOR
 from usuarios.models import Rol, SecurityLog
 
@@ -86,7 +82,6 @@ def buscar_usuario_por_email(email):
         return None
     return User.objects.filter(email__iexact=email.strip()).first()
 
-
 def nivel_usuario(user):
     if user.is_superuser:
         return NIVEL_ADMINISTRADOR
@@ -100,3 +95,4 @@ def roles_asignables(user):
     return Rol.objects.filter(nivel_jerarquia__lte=max_nivel).order_by(
         "-nivel_jerarquia"
     )
+

@@ -21,6 +21,24 @@ from usuarios.security import (
     roles_asignables,
 )
 
+from .forms import LoginForm
+from usuarios.security import registrar_login_exitoso
+
+
+def _nivel_usuario(user):
+    if user.is_superuser:
+        return 100
+    return user.rol.nivel_jerarquia if user.rol else 0
+
+
+def _roles_asignables(user):
+    if user.is_superuser:
+        return Rol.objects.all().order_by("-nivel_jerarquia")
+    max_nivel = _nivel_usuario(user)
+    return Rol.objects.filter(nivel_jerarquia__lte=max_nivel).order_by(
+        "-nivel_jerarquia"
+    )
+
 
 def vista_login(request):
     if request.user.is_authenticated:

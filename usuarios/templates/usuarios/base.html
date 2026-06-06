@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema de Gestión DSI — Panel de Administración">
+  <title>{% block titulo %}Sistema DSI{% endblock %} | Sistema de Gestión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{% static 'usuarios/css/styles.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="layout-app">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Menú principal">
+
+    <div class="sidebar-header">
+      <div class="sidebar-logo" aria-hidden="true">
+        <!-- Ícono escudo/sistema -->
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+               2.25 2.25 0 0 0 3 8.25v7.5A2.25 2.25 0 0 0 5.25 18h13.5A2.25 2.25 0 0 0
+               21 15.75v-7.5a2.25 2.25 0 0 0-.598-1.536A11.96 11.96 0 0 1 12 2.714Z"/>
+        </svg>
+      </div>
+      <span class="sidebar-brand">Sistema<br>Gestión DSI</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'roles_permisos' %}activo{% endif %}"
+         id="nav-roles">
+        Roles y Permisos
+      </a>
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'guardias' %}activo{% endif %}"
+         id="nav-guardias">
+        Guardias
+      </a>
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'trabajadores' %}activo{% endif %}"
+         id="nav-trabajadores">
+        Trabajadores
+      </a>
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'configuracion' %}activo{% endif %}"
+         id="nav-config">
+        Configuración
+      </a>
+      <a href="{% url 'usuarios:gestion_usuarios' %}"
+         class="nav-item {% if seccion_activa == 'gestion_usuarios' %}activo{% endif %}"
+         id="nav-usuarios">
+        Gestión de Usuarios
+      </a>
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'vacaciones' %}activo{% endif %}"
+         id="nav-vacaciones">
+        Vacaciones
+      </a>
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'reportes' %}activo{% endif %}"
+         id="nav-reportes">
+        Reportes
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-usuario">
+        <div class="sidebar-avatar" aria-hidden="true">
+          {{ request.user.username|first|upper }}
+        </div>
+        <div class="sidebar-usuario-info">
+          <div class="sidebar-usuario-nombre">
+            {{ request.user.get_full_name|default:request.user.username }}
+          </div>
+          <div class="sidebar-usuario-rol">
+            {{ request.user.rol.nombre|default:"Sin Rol" }}
+          </div>
+        </div>
+      </div>
+      <a href="{% url 'usuarios:logout' %}" class="btn-logout" id="btn-logout">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5
+               A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/>
+        </svg>
+        Cerrar Sesión
+      </a>
+    </div>
+
+  </aside>
+  <!-- ═══════════ FIN SIDEBAR ═══════════ -->
+
+  <!-- ═══════════ CONTENIDO PRINCIPAL ═══════════ -->
+  <main class="contenido-principal" id="contenido-principal">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1 class="topbar-titulo">{% block topbar_titulo %}Panel{% endblock %}</h1>
+      <div class="topbar-acciones">
+        {% block topbar_acciones %}{% endblock %}
+      </div>
+    </header>
+
+    <!-- Mensajes del sistema (Subtarea 1.3) -->
+    {% if messages %}
+    <div class="alertas-container" style="padding: 16px 28px 0;" role="alert" aria-live="polite">
+      {% for message in messages %}
+      <div class="alerta alerta-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}exito{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
+        <span class="alerta-icono">
+          {% if message.tags == 'error' %}⚠{% elif message.tags == 'success' %}✓{% else %}ℹ{% endif %}
+        </span>
+        <span>{{ message }}</span>
+        <button class="alerta-cerrar" aria-label="Cerrar alerta">×</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Área de contenido -->
+    <div class="panel-area">
+      {% block contenido %}{% endblock %}
+    </div>
+
+  </main>
+  <!-- ═══════════ FIN CONTENIDO ═══════════ -->
+
+</div><!-- /layout-app -->
+
+<script src="{% static 'usuarios/js/validaciones.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -83,6 +83,7 @@
 
       <!-- Columna: Select de asignación de rol (Subtarea 1.1) -->
       <div role="cell">
+        {% if puede_asignar_roles %}
         <select class="select-rol" data-usuario-id="{{ usuario.id }}"
           aria-label="Seleccionar rol para {{ usuario.username }}" id="select-rol-{{ usuario.id }}">
           <option value="">— Sin Rol —</option>
@@ -92,14 +93,21 @@
           </option>
           {% endfor %}
         </select>
+        {% else %}
+        <span class="celda-email">Solo lectura</span>
+        {% endif %}
       </div>
 
       <!-- Columna: Botón guardar -->
       <div role="cell">
+        {% if puede_asignar_roles %}
         <button class="btn-accion btn-guardar btn-guardar-rol" data-usuario-id="{{ usuario.id }}"
           aria-label="Guardar rol de {{ usuario.username }}" id="btn-guardar-{{ usuario.id }}">
           Guardar
         </button>
+        {% else %}
+        <span class="celda-email">—</span>
+        {% endif %}
       </div>
 
     </div>

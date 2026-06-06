@@ -2,86 +2,65 @@
 {% load static %}
 
 {% block titulo %}Gestión de Usuarios{% endblock %}
-
 {% block topbar_titulo %}Gestión de Usuarios{% endblock %}
 
 {% block topbar_acciones %}
-<!-- Barra de búsqueda (Subtarea 1.1) -->
-<form method="get" action="{% url 'usuarios:gestion_usuarios' %}" role="search"
-  style="display:flex; align-items:center; gap:8px;">
+<form method="get" action="{% url 'usuarios:gestion_usuarios' %}" role="search" style="display:flex; align-items:center; gap:8px;">
   <label class="barra-busqueda" for="input-busqueda">
-    <!-- Icono lupa -->
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
-      aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
     </svg>
-    <input type="search" id="input-busqueda" name="q" value="{{ busqueda }}" placeholder="Buscar usuario..."
-      aria-label="Buscar usuario por nombre o correo" autocomplete="off">
+    <input type="search" id="input-busqueda" name="q" value="{{ busqueda }}" placeholder="Buscar usuario..." aria-label="Buscar usuario" autocomplete="off">
   </label>
   {% if busqueda %}
-  <a href="{% url 'usuarios:gestion_usuarios' %}"
-    style="font-size:.82rem; color:var(--color-burdeos); text-decoration:none;" aria-label="Limpiar búsqueda">
-    Limpiar
-  </a>
+  <a href="{% url 'usuarios:gestion_usuarios' %}" style="font-size:.82rem; color:var(--color-burdeos); text-decoration:none;">Limpiar</a>
   {% endif %}
 </form>
+<a href="{% url 'usuarios:crear_usuario' %}" id="btn-nuevo-usuario" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; background:#6D0021; color:#fff; text-decoration:none; font-size:0.88rem; font-weight:600; white-space:nowrap; box-shadow:0 2px 6px rgba(109,0,33,0.3); border:none;">
+  <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+  Nuevo Usuario
+</a>
 {% endblock %}
 
 {% block contenido %}
-
-<!-- ═══════════════════════════════════════════════
-     TABLA DE USUARIOS 
-     ═══════════════════════════════════════════════ -->
-
 {% if busqueda %}
 <p style="margin-bottom:14px; font-size:.85rem; color:var(--color-texto-suave);">
-  Resultados para <strong>"{{ busqueda }}"</strong>
-  — {{ usuarios.count }} usuario{{ usuarios.count|pluralize:"s" }} encontrado{{ usuarios.count|pluralize:"s" }}.
+  Resultados para <strong>"{{ busqueda }}"</strong> — {{ usuarios.count }} usuario{{ usuarios.count|pluralize:"s" }} encontrado{{ usuarios.count|pluralize:"s" }}.
 </p>
 {% endif %}
 
 <div class="tabla-card" role="region" aria-label="Lista de usuarios del sistema">
-
-  <!-- Encabezado de la tabla -->
   <div class="tabla-header-row" role="row">
     <span role="columnheader">Usuario</span>
     <span role="columnheader">Correo Electrónico</span>
     <span role="columnheader">Rol Actual</span>
     <span role="columnheader">Asignar Rol</span>
-    <span role="columnheader">Acción</span>
+    <span role="columnheader">Acciones</span>
   </div>
 
-  <!-- Cuerpo de la tabla -->
   <div class="tabla-body" role="rowgroup">
-
     {% if usuarios %}
     {% for usuario in usuarios %}
     <div class="tabla-fila" role="row" id="fila-usuario-{{ usuario.id }}">
 
-      <!-- Columna: Usuario (avatar + nombre) -->
       <div class="celda-usuario" role="cell">
-        <div class="avatar-mini" aria-hidden="true">
-          {{ usuario.username|first|upper }}
+        <div class="avatar-mini" aria-hidden="true">{{ usuario.username|first|upper }}</div>
+        <div>
+          <span class="celda-nombre">{{ usuario.get_full_name|default:usuario.username }}</span>
+          <span style="display:block; font-size:0.78rem; color:#94a3b8;">{{ usuario.username }}</span>
         </div>
-        <span class="celda-nombre">
-          {{ usuario.get_full_name|default:usuario.username }}
-        </span>
       </div>
 
-      <!-- Columna: Email -->
       <div role="cell">
         <span class="celda-email">{{ usuario.email|default:"—" }}</span>
       </div>
 
-      <!-- Columna: Badge de Rol Actual -->
       <div role="cell">
         <span class="badge-rol {% if not usuario.rol %}badge-sin-rol{% endif %}">
           {{ usuario.rol.nombre|default:"Sin Rol" }}
         </span>
       </div>
 
-      <!-- Columna: Select de asignación de rol (Subtarea 1.1) -->
       <div role="cell">
         {% if puede_asignar_roles %}
         <select class="select-rol" data-usuario-id="{{ usuario.id }}"
@@ -98,32 +77,30 @@
         {% endif %}
       </div>
 
-      <!-- Columna: Botón guardar -->
-      <div role="cell">
+      <div role="cell" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         {% if puede_asignar_roles %}
         <button class="btn-accion btn-guardar btn-guardar-rol" data-usuario-id="{{ usuario.id }}"
           aria-label="Guardar rol de {{ usuario.username }}" id="btn-guardar-{{ usuario.id }}">
           Guardar
         </button>
-        {% else %}
-        <span class="celda-email">—</span>
         {% endif %}
+        <a href="{% url 'usuarios:editar_usuario' usuario.id %}" class="btn-accion btn-editar">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          Editar
+        </a>
+        <a href="{% url 'usuarios:cambiar_password' usuario.id %}" class="btn-accion btn-clave">
+          <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+          Clave
+        </a>
       </div>
 
     </div>
     {% endfor %}
 
     {% else %}
-    <!-- Estado vacío -->
     <div class="tabla-vacia" role="cell">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"
-        aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0
-               .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062
-               6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12
-               12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971
-               5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0
-               2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
       </svg>
       {% if busqueda %}
       <p>No se encontraron usuarios con "<strong>{{ busqueda }}</strong>".</p>
@@ -132,18 +109,12 @@
       {% endif %}
     </div>
     {% endif %}
-
   </div>
-  <!-- /tabla-body -->
-
 </div>
-<!-- /tabla-card -->
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Inicializar gestión de usuarios al cargar la página
   document.addEventListener("DOMContentLoaded", function () {
     inicializarGestionUsuarios();
   });

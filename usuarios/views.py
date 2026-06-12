@@ -1,26 +1,20 @@
 # usuarios/views.py
-# Integrante 1: Vistas web (login, panel, gestión de usuarios)
+# Integrante 1: Subtareas 1.1, 1.2, 1.3
+# Vistas para Login, Logout y Gestión de Usuarios con manejo de errores visuales.
 
-from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
 
-from usuarios.constants import (
-    NIVEL_ASIGNAR_ROLES,
-    NIVEL_GESTION_USUARIOS,
-)
+from usuarios.models import Usuario, Rol
 from usuarios.decorators import requiere_jerarquia
-from usuarios.forms import LoginForm
-from usuarios.models import Rol, Usuario
-from usuarios.security import (
-    nivel_usuario,
-    registrar_login_exitoso,
-    roles_asignables,
+from usuarios.constants import (
+    NIVEL_GESTION_USUARIOS,
+    NIVEL_ASIGNAR_ROLES,
 )
-
 from .forms import LoginForm
 from usuarios.security import registrar_login_exitoso
 
@@ -40,7 +34,16 @@ def _roles_asignables(user):
     )
 
 
+# ──────────────────────────────────────────────
+# Vista 1: Login
+# ──────────────────────────────────────────────
+
+
 def vista_login(request):
+    """
+    Subtarea 1.1 & 1.3:
+    Muestra el formulario de inicio de sesión y maneja errores visuales.
+    """
     if request.user.is_authenticated:
         return redirect("usuarios:dashboard")
 
@@ -66,11 +69,21 @@ def vista_login(request):
     )
 
 
+# ──────────────────────────────────────────────
+# Vista 2: Logout
+# ──────────────────────────────────────────────
+
+
 @login_required
 def vista_logout(request):
     logout(request)
     messages.info(request, "Has cerrado sesión correctamente.")
     return redirect("usuarios:login")
+
+
+# ──────────────────────────────────────────────
+# Vista 3: Dashboard principal
+# ──────────────────────────────────────────────
 
 
 @login_required
@@ -81,31 +94,25 @@ def vista_dashboard(request):
     return render(
         request,
         "usuarios/inicio.html",
-        {"titulo": "Inicio", "seccion_activa": "inicio"},
-    )
-
-
-def vista_sin_permisos(request, exception=None):
-    return render(
-        request,
-        "usuarios/sin_permisos.html",
         {
-            "titulo": "Acceso Denegado",
-            "mensaje": (
-                "Tu rol no tiene los permisos suficientes "
-                "para acceder a esta sección."
-            ),
+            "titulo": "Inicio",
+            "seccion_activa": "inicio",
         },
-        status=403,
     )
+
+
+# ──────────────────────────────────────────────
+# Vista 4: Gestión de Usuarios
+# ──────────────────────────────────────────────
 
 
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
 def vista_gestion_usuarios(request):
     usuarios = Usuario.objects.select_related("rol").all().order_by("username")
-    q = request.GET.get("q", "").strip()
+    roles = _roles_asignables(request.user)
 
+    q = request.GET.get("q", "").strip()
     if q:
         usuarios = usuarios.filter(
             Q(username__icontains=q)
@@ -118,7 +125,7 @@ def vista_gestion_usuarios(request):
         "usuarios/gestion_usuarios.html",
         {
             "usuarios": usuarios,
-            "roles": roles_asignables(request.user),
+            "roles": roles,
             "busqueda": q,
             "titulo": "Gestión de Usuarios",
             "seccion_activa": "gestion_usuarios",
@@ -127,6 +134,11 @@ def vista_gestion_usuarios(request):
             ),
         },
     )
+
+
+# ──────────────────────────────────────────────
+# Vista 5: Asignación de Rol (AJAX)
+# ──────────────────────────────────────────────
 
 
 @login_required
@@ -140,11 +152,13 @@ def vista_asignar_rol(request, usuario_id):
 
     if rol_id:
         rol = get_object_or_404(Rol, pk=rol_id)
-        if not request.user.is_superuser and rol.nivel_jerarquia > nivel_usuario(
+        if not request.user.is_superuser and rol.nivel_jerarquia > _nivel_usuario(
             request.user
         ):
             return JsonResponse(
-                {"error": "No puedes asignar un rol superior al tuyo."},
+                {
+                    "error": "No puedes asignar un rol superior al tuyo.",
+                },
                 status=403,
             )
         usuario_obj.rol = rol
@@ -168,4 +182,24 @@ def vista_asignar_rol(request, usuario_id):
             "mensaje": f"Rol removido del usuario {usuario_obj.username}.",
             "rol_nombre": "Sin Rol",
         }
+    )
+
+
+# ──────────────────────────────────────────────
+# Vista 6: Página de Error 403 (sin permisos)
+# ──────────────────────────────────────────────
+
+
+def vista_sin_permisos(request, exception=None):
+    return render(
+        request,
+        "usuarios/sin_permisos.html",
+        {
+            "titulo": "Acceso Denegado",
+            "mensaje": (
+                "Tu rol no tiene los permisos suficientes "
+                "para acceder a esta sección."
+            ),
+        },
+        status=403,
     )

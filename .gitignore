@@ -11,4 +11,4 @@
 
    # Archivos de entorno y variables sensibles
    .env
-*.sqlite3
+

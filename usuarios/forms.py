@@ -2,18 +2,7 @@
 # Integrante 1: Subtarea 1.2 — Validaciones en el Frontend (formularios Django + JS)
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.exceptions import ValidationError
 import re
-
-from usuarios.constants import (
-    MENSAJE_CREDENCIALES_INCORRECTAS,
-    MENSAJE_CUENTA_BLOQUEADA,
-)
-from usuarios.security import (
-    buscar_usuario_por_email,
-    login_esta_bloqueado,
-    registrar_login_fallido,
-)
 
 
 class LoginForm(AuthenticationForm):
@@ -22,8 +11,8 @@ class LoginForm(AuthenticationForm):
     Aplica validaciones de frontend: formato de correo, longitud mínima de contraseña.
     """
     error_messages = {
-        'invalid_login': MENSAJE_CREDENCIALES_INCORRECTAS,
-        'inactive': MENSAJE_CREDENCIALES_INCORRECTAS,
+        'invalid_login': 'Credenciales incorrectas. Verifica tu correo y contraseña.',
+        'inactive': 'Esta cuenta está inactiva.',
     }
 
     username = forms.EmailField(
@@ -70,39 +59,3 @@ class LoginForm(AuthenticationForm):
         if len(password) < 8:
             raise forms.ValidationError('La contraseña debe tener al menos 8 caracteres.')
         return password
-
-    def clean(self):
-        username = self.cleaned_data.get("username")
-        password = self.cleaned_data.get("password")
-
-        if username and password:
-            user = buscar_usuario_por_email(username)
-            if login_esta_bloqueado(user, request=self.request):
-                raise ValidationError(
-                    MENSAJE_CUENTA_BLOQUEADA,
-                    code="account_locked",
-                )
-
-        try:
-            return super().clean()
-        except ValidationError as exc:
-            user = buscar_usuario_por_email(username or "")
-            codes = {
-                error.code for error in exc.error_list
-            } if hasattr(exc, "error_list") else {exc.code}
-            if codes & {"invalid_login", "inactive"}:
-                registrar_login_fallido(self.request, user=user)
-                if user and user.esta_bloqueado():
-                    raise ValidationError(
-                        MENSAJE_CUENTA_BLOQUEADA,
-                        code="account_locked",
-                    )
-            raise
-
-    def confirm_login_allowed(self, user):
-        super().confirm_login_allowed(user)
-        if user.esta_bloqueado():
-            raise ValidationError(
-                MENSAJE_CUENTA_BLOQUEADA,
-                code="account_locked",
-            )

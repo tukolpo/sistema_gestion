@@ -48,19 +48,3 @@ class BloqueoCuentaMiddleware:
             return JsonResponse({"detail": MENSAJE_ACCESO_DENEGADO}, status=403)
         messages.error(request, MENSAJE_ACCESO_DENEGADO)
         return redirect("usuarios:login")
-
-
-class AuditMiddleware:
-    """
-    Guarda el objeto request actual en thread locals para que 
-    los signals de LogAuditoria puedan acceder al usuario y la IP.
-    """
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        from usuarios.signals import set_current_request
-        set_current_request(request)
-        response = self.get_response(request)
-        set_current_request(None)
-        return response

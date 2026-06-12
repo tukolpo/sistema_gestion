@@ -1,6 +1,3 @@
-# usuarios/serializers.py
-# Serializers JWT (API)
-
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -19,7 +16,9 @@ from usuarios.security import (
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Acepta correo en el campo ``username`` del JSON (igual que el login web)."""
+    """
+    Acepta correo en el campo ``username`` del JSON (igual que el login web).
+    """
 
     def validate(self, attrs):
         identificador = (attrs.get("username") or "").strip()

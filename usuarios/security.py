@@ -1,9 +1,10 @@
-
 from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from usuarios.constants import MAX_INTENTOS_LOGIN, MINUTOS_BLOQUEO_LOGIN, NIVEL_ADMINISTRADOR
-from usuarios.models import Rol, SecurityLog
+
+from usuarios.constants import MAX_INTENTOS_LOGIN, MINUTOS_BLOQUEO_LOGIN
+from usuarios.models import SecurityLog
 
 User = get_user_model()
 
@@ -48,6 +49,7 @@ def _limpiar_bloqueo_expirado(user):
 
 
 def login_esta_bloqueado(user, request=None):
+    """True si la cuenta no puede iniciar sesión en este momento."""
     if user is None:
         return False
     if _limpiar_bloqueo_expirado(user):
@@ -81,18 +83,3 @@ def buscar_usuario_por_email(email):
     if not email:
         return None
     return User.objects.filter(email__iexact=email.strip()).first()
-
-def nivel_usuario(user):
-    if user.is_superuser:
-        return NIVEL_ADMINISTRADOR
-    return user.rol.nivel_jerarquia if user.rol else 0
-
-
-def roles_asignables(user):
-    if user.is_superuser:
-        return Rol.objects.all().order_by("-nivel_jerarquia")
-    max_nivel = nivel_usuario(user)
-    return Rol.objects.filter(nivel_jerarquia__lte=max_nivel).order_by(
-        "-nivel_jerarquia"
-    )
-

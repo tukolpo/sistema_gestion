@@ -11,16 +11,6 @@ NIVEL_OPERATIVO = 10
 NIVEL_GESTION_USUARIOS = NIVEL_SUPERVISOR
 NIVEL_ASIGNAR_ROLES = NIVEL_ADMINISTRADOR
 
-# Bloqueo por intentos fallidos de login (Tarea 4)
-MAX_INTENTOS_LOGIN = 5
-MINUTOS_BLOQUEO_LOGIN = 5
-
-MENSAJE_CREDENCIALES_INCORRECTAS = "Usuario o contraseña incorrectos"
-MENSAJE_CUENTA_BLOQUEADA = (
-    "Cuenta bloqueada debido a varios intentos fallidos. Inténtelo más tarde"
-)
-MENSAJE_ACCESO_DENEGADO = "Acceso denegado."
-
 ROLES_INICIALES = [
     {
         "nombre": "Administrador",

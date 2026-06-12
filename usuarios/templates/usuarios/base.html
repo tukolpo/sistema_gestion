@@ -32,8 +32,8 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a href="{% url 'usuarios:lista_roles' %}"
-         class="nav-item {% if seccion_activa == 'roles' %}activo{% endif %}"
+      <a href="#"
+         class="nav-item {% if seccion_activa == 'roles_permisos' %}activo{% endif %}"
          id="nav-roles">
         Roles y Permisos
       </a>
@@ -42,7 +42,7 @@
          id="nav-guardias">
         Guardias
       </a>
-      <a href="{% url 'trabajadores:lista' %}"
+      <a href="#"
          class="nav-item {% if seccion_activa == 'trabajadores' %}activo{% endif %}"
          id="nav-trabajadores">
         Trabajadores
@@ -56,11 +56,6 @@
          class="nav-item {% if seccion_activa == 'gestion_usuarios' %}activo{% endif %}"
          id="nav-usuarios">
         Gestión de Usuarios
-      </a>
-      <a href="{% url 'usuarios:auditoria' %}"
-         class="nav-item {% if seccion_activa == 'auditoria' %}activo{% endif %}"
-         id="nav-auditoria">
-        Auditoría
       </a>
       <a href="#"
          class="nav-item {% if seccion_activa == 'vacaciones' %}activo{% endif %}"

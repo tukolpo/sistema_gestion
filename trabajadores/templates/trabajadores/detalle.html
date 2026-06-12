@@ -1,395 +1,92 @@
 {% extends "usuarios/base.html" %}
 
 {% block titulo %}{{ titulo }}{% endblock %}
-{% block topbar_titulo %}Detalle del Trabajador{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
 
 {% block topbar_acciones %}
-<a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion" style="background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:600; padding:8px 16px; box-shadow: 0 2px 4px rgba(59,130,246,0.2);">
-  Editar perfil
-</a>
-<a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; padding:8px 16px;">
-  Volver
-</a>
+<a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion btn-guardar">Editar perfil</a>
+<a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;">Volver</a>
 {% endblock %}
 
 {% block contenido %}
-<div class="perfil-layout">
-  
-  <!-- Sidebar Perfil -->
-  <aside class="perfil-sidebar">
-    <div class="card-glass text-center">
-      <div class="avatar-container">
-        {% if trabajador.foto %}
-        <img src="{% url 'trabajadores:foto' trabajador.id %}" alt="Foto de {{ trabajador.nombre }}" class="avatar-img">
-        {% else %}
-        <div class="avatar-placeholder">
-          {{ trabajador.nombre|first|upper }}
-        </div>
-        {% endif %}
-        <div class="status-indicator {% if trabajador.esta_activo %}active{% else %}inactive{% endif %}"></div>
-      </div>
+<div style="display:grid; grid-template-columns: 280px 1fr; gap: 24px; align-items:start;">
 
-      <h2 class="perfil-nombre">{{ trabajador.nombre }} {{ trabajador.apellido }}</h2>
-      <p class="perfil-cedula">C.I. {{ trabajador.cedula }}</p>
+  <div class="tabla-card" style="padding: 24px; text-align:center;">
+    {% if trabajador.foto %}
+    <img src="{% url 'trabajadores:foto' trabajador.id %}" alt="Foto de perfil"
+      style="width:160px; height:160px; object-fit:cover; border-radius:50%; margin-bottom:16px;">
+    {% else %}
+    <div class="avatar-mini" style="width:120px; height:120px; font-size:3rem; margin:0 auto 16px;">
+      {{ trabajador.nombre|first|upper }}
+    </div>
+    {% endif %}
 
-      <div class="badge-rol-modern {% if not trabajador.esta_activo %}badge-inactivo{% endif %}">
-        {{ trabajador.get_estado_display }}
-      </div>
+    <h2 style="margin:0 0 8px;">{{ trabajador.nombre }} {{ trabajador.apellido }}</h2>
+    <p style="color:#666; margin:0 0 12px;">{{ trabajador.cedula }}</p>
 
-      <form method="post" action="{% url 'trabajadores:estado' trabajador.id %}" class="mt-4">
+    <span class="badge-rol {% if not trabajador.esta_activo %}badge-sin-rol{% endif %}">
+      {{ trabajador.get_estado_display }}
+    </span>
+
+    <form method="post" action="{% url 'trabajadores:estado' trabajador.id %}" style="margin-top:16px;">
+      {% csrf_token %}
+      <button type="submit" class="btn-accion"
+        style="background:{% if trabajador.esta_activo %}#8b1a2b{% else %}#2b6b3a{% endif %}; color:white; width:100%;">
+        {% if trabajador.esta_activo %}Marcar inactivo{% else %}Marcar activo{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <div>
+    <div class="tabla-card" style="padding: 24px; margin-bottom: 24px;">
+      <h3 style="margin-top:0;">Perfil laboral</h3>
+      <dl style="display:grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin:0;">
+        <dt>Cargo</dt><dd>{{ trabajador.cargo }}</dd>
+        <dt>Especialidad</dt><dd>{{ trabajador.especialidad|default:"—" }}</dd>
+        <dt>Ingreso</dt><dd>{{ trabajador.fecha_ingreso|default:"—" }}</dd>
+        <dt>Teléfono</dt><dd>{{ trabajador.telefono|default:"—" }}</dd>
+        <dt>Email</dt><dd>{{ trabajador.email|default:"—" }}</dd>
+      </dl>
+      {% if trabajador.notas_perfil %}
+      <p style="margin-top:16px;"><strong>Notas:</strong> {{ trabajador.notas_perfil }}</p>
+      {% endif %}
+    </div>
+
+    <div class="tabla-card" style="padding: 24px;">
+      <h3 style="margin-top:0;">Documentos</h3>
+
+      {% if documentos %}
+      <ul style="list-style:none; padding:0; margin:0 0 20px;">
+        {% for doc in documentos %}
+        <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
+          <div>
+            <strong>{{ doc.titulo }}</strong>
+            <span style="color:#888; font-size:0.85rem;"> — {{ doc.get_tipo_display }} · {{ doc.subido_en|date:"d/m/Y" }}</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="{% url 'trabajadores:ver_documento' doc.id %}" class="btn-accion btn-guardar" target="_blank" rel="noopener">Ver</a>
+            <a href="{% url 'trabajadores:descargar_documento' doc.id %}" class="btn-accion">Descargar</a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p style="color:#666;">Sin documentos adjuntos.</p>
+      {% endif %}
+
+      <h4>Subir documento</h4>
+      <form method="post" enctype="multipart/form-data" style="max-width:480px;">
         {% csrf_token %}
-        <button type="submit" class="btn-toggle-status {% if trabajador.esta_activo %}btn-red{% else %}btn-green{% endif %}">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
-          {% if trabajador.esta_activo %}Marcar como Inactivo{% else %}Marcar como Activo{% endif %}
-        </button>
+        {% for field in doc_form %}
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn-accion btn-guardar">Subir</button>
       </form>
-
-      <div class="qr-section">
-          <h4>Código QR de Verificación</h4>
-          <div id="qrcode" class="qr-box"></div>
-          <a href="{% url 'trabajadores:perfil_publico' trabajador.uuid %}" target="_blank" class="qr-link">
-            Abrir perfil público 
-            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-          </a>
-      </div>
     </div>
-  </aside>
-
-  <!-- Contenido Principal Perfil -->
-  <main class="perfil-main">
-    <div class="card-glass mb-4">
-      <div class="card-header">
-        <h3 class="card-title">Información Laboral y Personal</h3>
-      </div>
-      <div class="card-body">
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">Cargo</span>
-            <span class="info-value">{{ trabajador.cargo }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Departamento</span>
-            <span class="info-value">{{ trabajador.departamento|default:"—" }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Especialidad</span>
-            <span class="info-value">{{ trabajador.especialidad|default:"—" }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Fecha de Ingreso</span>
-            <span class="info-value">{{ trabajador.fecha_ingreso|date:"d/m/Y"|default:"—" }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Fecha de Nacimiento</span>
-            <span class="info-value">{{ trabajador.fecha_nacimiento|date:"d/m/Y"|default:"—" }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Teléfono</span>
-            <span class="info-value">{{ trabajador.telefono|default:"—" }}</span>
-          </div>
-          <div class="info-item full-width">
-            <span class="info-label">Email</span>
-            <span class="info-value">{{ trabajador.email|default:"—" }}</span>
-          </div>
-          {% if trabajador.notas_perfil %}
-          <div class="info-item full-width notas-box">
-            <span class="info-label">Notas Adicionales</span>
-            <p class="info-text">{{ trabajador.notas_perfil }}</p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="card-glass">
-      <div class="card-header">
-        <h3 class="card-title">Documentos Adjuntos</h3>
-      </div>
-      <div class="card-body">
-        {% if documentos %}
-        <div class="doc-list">
-          {% for doc in documentos %}
-          <div class="doc-item">
-            <div class="doc-icon">
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-            </div>
-            <div class="doc-info">
-              <h4 class="doc-title">{{ doc.titulo }}</h4>
-              <p class="doc-meta">{{ doc.get_tipo_display }} • Subido el {{ doc.subido_en|date:"d/m/Y" }}</p>
-            </div>
-            <div class="doc-actions">
-              <a href="{% url 'trabajadores:ver_documento' doc.id %}" target="_blank" class="btn-icon btn-view" title="Ver Documento">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-              </a>
-              <a href="{% url 'trabajadores:descargar_documento' doc.id %}" class="btn-icon btn-download" title="Descargar Documento">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              </a>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="empty-state">
-          <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="#cbd5e1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          <p>No hay documentos adjuntos para este trabajador.</p>
-        </div>
-        {% endif %}
-
-        <div class="upload-section">
-          <h4>Subir nuevo documento</h4>
-          <form method="post" enctype="multipart/form-data" class="upload-form">
-            {% csrf_token %}
-            <div class="upload-grid">
-                {% for field in doc_form %}
-                <div class="input-group">
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}<span class="error-text">{{ field.errors.0 }}</span>{% endif %}
-                </div>
-                {% endfor %}
-            </div>
-            <button type="submit" class="btn-upload">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                Subir Archivo
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </main>
+  </div>
 </div>
-
-<style>
-  .perfil-layout {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 32px;
-    align-items: start;
-    animation: fadeIn 0.4s ease-out;
-  }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  .card-glass {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.05);
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-  }
-
-  .text-center { text-align: center; padding: 32px 24px; }
-  .mb-4 { margin-bottom: 24px; }
-  .mt-4 { margin-top: 24px; }
-
-  .avatar-container {
-    position: relative;
-    width: 140px;
-    height: 140px;
-    margin: 0 auto 20px;
-  }
-
-  .avatar-img, .avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #fff;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-  }
-
-  .avatar-placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-    font-size: 3.5rem;
-    font-weight: 700;
-    color: #64748b;
-  }
-
-  .status-indicator {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 3px solid #fff;
-  }
-  .status-indicator.active { background: #22c55e; }
-  .status-indicator.inactive { background: #ef4444; }
-
-  .perfil-nombre { margin: 0 0 4px; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
-  .perfil-cedula { margin: 0 0 16px; font-size: 0.95rem; color: #64748b; }
-
-  .badge-rol-modern {
-    display: inline-block;
-    padding: 6px 16px;
-    background: #dbeafe;
-    color: #1e40af;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  .badge-inactivo { background: #fee2e2; color: #991b1b; }
-
-  .btn-toggle-status {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-red { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-  .btn-red:hover { background: #fee2e2; }
-  .btn-green { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-  .btn-green:hover { background: #dcfce7; }
-
-  .qr-section {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px dashed #e2e8f0;
-  }
-  .qr-section h4 { margin: 0 0 16px; font-size: 0.95rem; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; }
-  .qr-box {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    display: inline-block;
-  }
-  .qr-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.9rem;
-    color: #3b82f6;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  .qr-link:hover { color: #2563eb; text-decoration: underline; }
-
-  .card-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #f1f5f9;
-    background: #f8fafc;
-  }
-  .card-title { margin: 0; font-size: 1.15rem; font-weight: 600; color: #334155; }
-  .card-body { padding: 24px; }
-
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px 24px;
-  }
-  .full-width { grid-column: 1 / -1; }
-  
-  .info-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .info-label { font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-  .info-value { font-size: 1.05rem; color: #0f172a; font-weight: 500; }
-  
-  .notas-box { background: #fffbeb; padding: 16px; border-radius: 8px; border-left: 4px solid #fbbf24; }
-  .notas-box .info-label { color: #b45309; }
-  .info-text { margin: 8px 0 0; color: #451a03; line-height: 1.5; font-size: 0.95rem; }
-
-  .doc-list { display: flex; flex-direction: column; gap: 12px; }
-  .doc-item {
-    display: flex;
-    align-items: center;
-    padding: 16px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    transition: all 0.2s;
-  }
-  .doc-item:hover { background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transform: translateY(-2px); border-color: #cbd5e1; }
-  .doc-icon { width: 40px; height: 40px; border-radius: 8px; background: #e0e7ff; color: #4f46e5; display: flex; align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0; }
-  .doc-info { flex: 1; }
-  .doc-title { margin: 0 0 4px; font-size: 1rem; color: #1e293b; font-weight: 600; }
-  .doc-meta { margin: 0; font-size: 0.8rem; color: #64748b; }
-  .doc-actions { display: flex; gap: 8px; }
-  
-  .btn-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    color: #475569;
-    background: #f1f5f9;
-    transition: all 0.2s;
-  }
-  .btn-view:hover { background: #dbeafe; color: #2563eb; }
-  .btn-download:hover { background: #dcfce7; color: #16a34a; }
-
-  .empty-state { text-align: center; padding: 40px 20px; color: #64748b; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0; }
-  .empty-state p { margin: 12px 0 0; font-weight: 500; }
-
-  .upload-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #f1f5f9; }
-  .upload-section h4 { margin: 0 0 16px; font-size: 1.05rem; color: #334155; }
-  
-  .upload-form { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-  .upload-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
-  
-  .input-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; color: #475569; }
-  .input-group input[type="text"], .input-group select, .input-group input[type="file"] {
-    width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; box-sizing: border-box;
-  }
-  .error-text { display: block; font-size: 0.8rem; color: #ef4444; margin-top: 4px; }
-  
-  .btn-upload {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 12px;
-    background: #1e293b;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-upload:hover { background: #0f172a; }
-
-  @media (max-width: 900px) {
-    .perfil-layout { grid-template-columns: 1fr; }
-    .info-grid { grid-template-columns: 1fr; }
-  }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    var publicUrl = window.location.origin + "{% url 'trabajadores:perfil_publico' trabajador.uuid %}";
-    new QRCode(document.getElementById("qrcode"), {
-      text: publicUrl,
-      width: 130,
-      height: 130,
-      colorDark : "#0f172a",
-      colorLight : "#ffffff",
-      correctLevel : QRCode.CorrectLevel.H
-    });
-  });
-</script>
 {% endblock %}

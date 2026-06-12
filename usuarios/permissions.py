@@ -1,12 +1,10 @@
 from rest_framework import permissions  # type: ignore[import]
 
-from usuarios.constants import NIVEL_GESTION_USUARIOS
-
 
 class TieneJerarquiaMinima(permissions.BasePermission):
     """Permiso personalizado para Django REST Framework."""
 
-    nivel_requerido = NIVEL_GESTION_USUARIOS
+    nivel_requerido = 50
 
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:

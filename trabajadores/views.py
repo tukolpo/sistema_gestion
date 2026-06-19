@@ -194,9 +194,6 @@ def ver_documento(request, documento_id):
 
 @login_required
 def descargar_documento(request, documento_id):
-    if not _puede_gestionar(request.user):
-        return HttpResponseForbidden()
-
     documento = get_object_or_404(DocumentoTrabajador, pk=documento_id)
     response = FileResponse(
         documento.archivo.open("rb"),
@@ -204,3 +201,13 @@ def descargar_documento(request, documento_id):
         filename=documento.archivo.name.split("/")[-1],
     )
     return response
+
+
+def perfil_publico_trabajador(request, trabajador_uuid):
+    """Vista pública para verificar un trabajador mediante su código QR."""
+    trabajador = get_object_or_404(Trabajador.objects.select_related("cargo", "especialidad"), uuid=trabajador_uuid)
+    return render(
+        request,
+        "trabajadores/perfil_publico.html",
+        {"trabajador": trabajador, "titulo": f"Perfil de {trabajador.nombre}"}
+    )

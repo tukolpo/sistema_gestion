@@ -1,3 +1,9 @@
+.nav-item--deshabilitado {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ===================================================
    SISTEMA DE GESTIÓN DSI — Estilos Globales
    Integrante 1: Frontend Developer

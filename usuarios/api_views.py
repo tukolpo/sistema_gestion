@@ -1,3 +1,6 @@
+# usuarios/api_views.py
+# Vistas API REST (JWT, perfil)
+
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,8 +10,6 @@ from usuarios.permissions import TieneJerarquiaMinima
 
 
 class PerfilAPIView(APIView):
-    """Ejemplo de endpoint protegido por jerarquía (Tarea 2 + 3)."""
-
     permission_classes = [IsAuthenticated, TieneJerarquiaMinima]
     nivel_requerido = NIVEL_OPERATIVO
 

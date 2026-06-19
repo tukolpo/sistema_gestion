@@ -1,0 +1,24 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
+
+{% block topbar_acciones %}
+<a href="{% url 'trabajadores:detalle' trabajador.id %}" class="btn-accion" style="background:#ccc; color:#333;">Volver al perfil</a>
+{% endblock %}
+
+{% block contenido %}
+<div style="display:grid; grid-template-columns: 320px 1fr; gap:24px; align-items:start;">
+  <div class="tabla-card" style="padding:24px; text-align:center;">
+    <img src="{% url 'trabajadores_ext:qr_imagen' trabajador.id %}" alt="QR" width="260" height="260" style="margin:0 auto 16px;">
+    <p style="font-size:0.85rem; color:#64748b; word-break:break-all;">{{ url_publica }}</p>
+  </div>
+  <div class="tabla-card" style="padding:24px;">
+    <h3 style="margin-top:0;">{{ trabajador.nombre }} {{ trabajador.apellido }}</h3>
+    <p>Cédula: {{ trabajador.cedula }}</p>
+    <p>Cargo: {{ trabajador.cargo }}</p>
+    <p>Token: {{ token }}</p>
+    <a href="{{ url_publica }}" target="_blank" rel="noopener" class="btn-accion btn-guardar">Abrir perfil público</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+[
+{
+  "model": "trabajadores.cargo",
+  "pk": 1,
+  "fields": {
+    "nombre": "ohff",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.cargo",
+  "pk": 2,
+  "fields": {
+    "nombre": "General",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.cargo",
+  "pk": 3,
+  "fields": {
+    "nombre": "Administrativo",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.cargo",
+  "pk": 4,
+  "fields": {
+    "nombre": "Operativo",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.cargo",
+  "pk": 5,
+  "fields": {
+    "nombre": "Supervisor",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.especialidad",
+  "pk": 1,
+  "fields": {
+    "nombre": "fhdhth",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.especialidad",
+  "pk": 2,
+  "fields": {
+    "nombre": "Ninguna",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.especialidad",
+  "pk": 3,
+  "fields": {
+    "nombre": "Seguridad",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.especialidad",
+  "pk": 4,
+  "fields": {
+    "nombre": "Recursos Humanos",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.especialidad",
+  "pk": 5,
+  "fields": {
+    "nombre": "LogÝstica",
+    "descripcion": ""
+  }
+},
+{
+  "model": "trabajadores.trabajador",
+  "pk": 1,
+  "fields": {
+    "nombre": "paco",
+    "apellido": "gonzales",
+    "cedula": "3455565426565",
+    "fecha_nacimiento": null,
+    "fecha_ingreso": null,
+    "departamento": "hthbdg",
+    "cargo": 3,
+    "especialidad": 1,
+    "estado": "INACTIVO",
+    "telefono": "",
+    "email": "",
+    "notas_perfil": "",
+    "foto": "trabajadores/1/fotos/perfil.webp",
+    "fecha_creacion": "2026-06-05T02:07:42.746Z",
+    "fecha_actualizacion": "2026-06-19T01:26:18.814Z"
+  }
+},
+{
+  "model": "trabajadores.trabajador",
+  "pk": 2,
+  "fields": {
+    "nombre": "Saul",
+    "apellido": "ramirez",
+    "cedula": "3455565426565rt",
+    "fecha_nacimiento": null,
+    "fecha_ingreso": null,
+    "departamento": "efhkfhrubg",
+    "cargo": 2,
+    "especialidad": 3,
+    "estado": "ACTIVO",
+    "telefono": "8746558555857",
+    "email": "proyecto@gmail.com",
+    "notas_perfil": "hola",
+    "foto": "trabajadores/2/fotos/perfil.webp",
+    "fecha_creacion": "2026-06-05T14:24:00.379Z",
+    "fecha_actualizacion": "2026-06-05T15:07:23.380Z"
+  }
+},
+{
+  "model": "trabajadores.documentotrabajador",
+  "pk": 1,
+  "fields": {
+    "trabajador": 1,
+    "tipo": "CEDULA",
+    "titulo": "trrht",
+    "archivo": "trabajadores/1/documentos/3a1427418ca240e1b4ecb771360c64a2_CEDULA.pdf",
+    "subido_en": "2026-06-05T14:36:42.315Z",
+    "subido_por": 1
+  }
+}
+]

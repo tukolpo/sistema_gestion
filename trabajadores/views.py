@@ -2,7 +2,6 @@ import mimetypes
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import FileResponse, Http404, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -10,7 +9,7 @@ from usuarios.constants import NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
 
 from .forms import DocumentoTrabajadorForm, TrabajadorForm
-from .models import DocumentoTrabajador, Trabajador
+from .models import Cargo, DocumentoTrabajador, Trabajador
 from .utils import cambiar_estado_trabajador
 
 
@@ -28,27 +27,19 @@ def _puede_gestionar(user):
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
 def lista_trabajadores(request):
-    trabajadores = Trabajador.objects.select_related("cargo", "especialidad")
-    q = request.GET.get("q", "").strip()
-    estado = request.GET.get("estado", "").strip()
-
-    if q:
-        trabajadores = trabajadores.filter(
-            Q(nombre__icontains=q)
-            | Q(apellido__icontains=q)
-            | Q(cedula__icontains=q)
-        )
-    if estado in Trabajador.Estado.values:
-        trabajadores = trabajadores.filter(estado=estado)
+    departamentos = (
+        Trabajador.objects.values_list("departamento", flat=True)
+        .distinct()
+        .order_by("departamento")
+    )
 
     return render(
         request,
         "trabajadores/lista.html",
         _contexto_base(
             {
-                "trabajadores": trabajadores,
-                "busqueda": q,
-                "filtro_estado": estado,
+                "cargos": Cargo.objects.all(),
+                "departamentos": departamentos,
                 "titulo": "Gestión de Trabajadores",
             }
         ),

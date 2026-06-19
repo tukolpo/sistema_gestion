@@ -36,8 +36,64 @@
     style="display:none;" aria-label="Limpiar filtros">
     Limpiar
   </button>
+
+  <div class="dropdown-exportar" style="position:relative; display:inline-block;">
+    <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false">
+      Exportar ▾
+    </button>
+    <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:140px; z-index:10;">
+      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">Excel</a>
+      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">CSV</a>
+      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">PDF</a>
+    </div>
+  </div>
+
   <a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar">+ Nuevo</a>
 </form>
+
+<script>
+  (function () {
+    var urlsExport = {
+      excel: "{% url 'trabajadores:exportar_excel' %}",
+      csv: "{% url 'trabajadores:exportar_csv' %}",
+      pdf: "{% url 'trabajadores:exportar_pdf' %}",
+    };
+    var btnExportar = document.getElementById("btn-exportar");
+    var menu = document.getElementById("menu-exportar");
+
+    btnExportar.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var abierto = menu.style.display === "block";
+      menu.style.display = abierto ? "none" : "block";
+      btnExportar.setAttribute("aria-expanded", String(!abierto));
+    });
+
+    document.addEventListener("click", function () {
+      menu.style.display = "none";
+      btnExportar.setAttribute("aria-expanded", "false");
+    });
+
+    document.querySelectorAll(".btn-exportar-link").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        var formato = link.dataset.formato;
+        var params = new URLSearchParams();
+
+        var cargo = document.getElementById("filtro-cargo").value;
+        var departamento = document.getElementById("filtro-departamento").value;
+        var estatus = document.getElementById("filtro-estatus").value;
+        var antiguedad = document.getElementById("filtro-antiguedad").value;
+
+        if (cargo) params.set("cargo", cargo);
+        if (departamento) params.set("departamento", departamento);
+        if (estatus) params.set("estatus", estatus);
+        if (antiguedad) params.set("antiguedad", antiguedad);
+
+        window.location.href = urlsExport[formato] + "?" + params.toString();
+      });
+    });
+  })();
+</script>
 {% endblock %}
 
 {% block extra_css %}

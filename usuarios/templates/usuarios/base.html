@@ -57,6 +57,13 @@
          id="nav-usuarios">
         Gestión de Usuarios
       </a>
+      {% if es_administrador %}
+      <a href="{% url 'trabajadores_ext:auditoria' %}"
+         class="nav-item {% if seccion_activa == 'auditoria' %}activo{% endif %}"
+         id="nav-auditoria">
+        Auditoría
+      </a>
+      {% endif %}
       <a href="#"
          class="nav-item {% if seccion_activa == 'vacaciones' %}activo{% endif %}"
          id="nav-vacaciones">

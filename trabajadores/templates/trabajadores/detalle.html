@@ -4,6 +4,7 @@
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
 {% block topbar_acciones %}
+<a href="{% url 'trabajadores_ext:credencial_qr' trabajador.id %}" class="btn-accion">Ver credencial QR</a>
 <a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion btn-guardar">Editar perfil</a>
 <a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;">Volver</a>
 {% endblock %}

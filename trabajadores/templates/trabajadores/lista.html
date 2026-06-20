@@ -5,76 +5,143 @@
 {% block topbar_titulo %}Gestión de Trabajadores{% endblock %}
 
 {% block topbar_acciones %}
-<form method="get" action="{% url 'trabajadores:lista' %}" role="search"
+<form id="form-filtros-trabajadores" role="search"
   style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-  <label class="barra-busqueda" for="input-busqueda">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-    </svg>
-    <input type="search" id="input-busqueda" name="q" value="{{ busqueda }}"
-      placeholder="Buscar trabajador..." autocomplete="off">
-  </label>
-  <select name="estado" class="form-input" style="width:auto;" onchange="this.form.submit()">
-    <option value="">Todos los estados</option>
-    <option value="ACTIVO" {% if filtro_estado == "ACTIVO" %}selected{% endif %}>Activos</option>
-    <option value="INACTIVO" {% if filtro_estado == "INACTIVO" %}selected{% endif %}>Inactivos</option>
+  <select id="filtro-cargo" name="cargo" class="form-input" style="width:auto;"
+    aria-label="Filtrar por cargo">
+    <option value="">Todos los cargos</option>
+    {% for c in cargos %}
+    <option value="{{ c.id }}">{{ c.nombre }}</option>
+    {% endfor %}
   </select>
+  <select id="filtro-departamento" name="departamento" class="form-input" style="width:auto;"
+    aria-label="Filtrar por departamento">
+    <option value="">Todos los departamentos</option>
+    {% for d in departamentos %}
+    <option value="{{ d }}">{{ d }}</option>
+    {% endfor %}
+  </select>
+  <select id="filtro-estatus" name="estatus" class="form-input" style="width:auto;"
+    aria-label="Filtrar por estatus">
+    <option value="">Todos los estatus</option>
+    <option value="ACTIVO">Activos</option>
+    <option value="INACTIVO">Inactivos</option>
+  </select>
+  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:140px;">
+    <input type="number" id="filtro-antiguedad" name="antiguedad" min="0" step="1"
+      placeholder="Antigüedad (años)" class="form-input" style="width:100%;"
+      aria-label="Antigüedad mínima en años">
+  </label>
+  <button type="button" id="btn-limpiar-filtros" class="btn-accion"
+    style="display:none;" aria-label="Limpiar filtros">
+    Limpiar
+  </button>
+
+  <div class="dropdown-exportar" style="position:relative; display:inline-block;">
+    <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false">
+      Exportar ▾
+    </button>
+    <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:140px; z-index:10;">
+      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">Excel</a>
+      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">CSV</a>
+      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">PDF</a>
+    </div>
+  </div>
+
   <a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar">+ Nuevo</a>
 </form>
+
+<script>
+  (function () {
+    var urlsExport = {
+      excel: "{% url 'trabajadores:exportar_excel' %}",
+      csv: "{% url 'trabajadores:exportar_csv' %}",
+      pdf: "{% url 'trabajadores:exportar_pdf' %}",
+    };
+    var btnExportar = document.getElementById("btn-exportar");
+    var menu = document.getElementById("menu-exportar");
+
+    btnExportar.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var abierto = menu.style.display === "block";
+      menu.style.display = abierto ? "none" : "block";
+      btnExportar.setAttribute("aria-expanded", String(!abierto));
+    });
+
+    document.addEventListener("click", function () {
+      menu.style.display = "none";
+      btnExportar.setAttribute("aria-expanded", "false");
+    });
+
+    document.querySelectorAll(".btn-exportar-link").forEach(function (link) {
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        var formato = link.dataset.formato;
+        var params = new URLSearchParams();
+
+        var cargo = document.getElementById("filtro-cargo").value;
+        var departamento = document.getElementById("filtro-departamento").value;
+        var estatus = document.getElementById("filtro-estatus").value;
+        var antiguedad = document.getElementById("filtro-antiguedad").value;
+
+        if (cargo) params.set("cargo", cargo);
+        if (departamento) params.set("departamento", departamento);
+        if (estatus) params.set("estatus", estatus);
+        if (antiguedad) params.set("antiguedad", antiguedad);
+
+        window.location.href = urlsExport[formato] + "?" + params.toString();
+      });
+    });
+  })();
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  #contenedor-tabla-trabajadores .tabla-header-row,
+  #contenedor-tabla-trabajadores .tabla-fila {
+    grid-template-columns: 2fr 1.2fr 1.5fr 1.5fr 1fr 1fr 1.8fr;
+  }
+</style>
 {% endblock %}
 
 {% block contenido %}
-<div class="tabla-card" role="region">
+<div class="tabla-card" role="region" aria-live="polite" aria-busy="false"
+  id="contenedor-tabla-trabajadores">
 
   <div class="tabla-header-row" role="row">
     <span>Trabajador</span>
     <span>Cédula</span>
     <span>Cargo</span>
+    <span>Departamento</span>
+    <span>Antigüedad</span>
     <span>Estado</span>
     <span>Acciones</span>
   </div>
 
-  <div class="tabla-body" role="rowgroup">
-    {% if trabajadores %}
-    {% for t in trabajadores %}
-    <div class="tabla-fila" role="row">
-
-      <div class="celda-usuario">
-        <div class="avatar-mini">{{ t.nombre|first|upper }}</div>
-        <a href="{% url 'trabajadores:detalle' t.id %}" class="celda-nombre">{{ t.nombre }} {{ t.apellido }}</a>
-      </div>
-
-      <div><span class="celda-email">{{ t.cedula }}</span></div>
-      <div><span class="celda-email">{{ t.cargo.nombre }}</span></div>
-      
-
-      <div>
-        <span class="badge-rol {% if not t.esta_activo %}badge-sin-rol{% endif %}">
-          {{ t.get_estado_display }}
-        </span>
-      </div>
-
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a href="{% url 'trabajadores:detalle' t.id %}" class="btn-accion">Perfil</a>
-        <a href="{% url 'trabajadores:editar' t.id %}" class="btn-accion btn-guardar">Editar</a>
-        <form method="post" action="{% url 'trabajadores:estado' t.id %}">
-          {% csrf_token %}
-          <button type="submit" class="btn-accion"
-            style="background:{% if t.esta_activo %}#8b1a2b{% else %}#2b6b3a{% endif %}; color:white;">
-            {% if t.esta_activo %}Desactivar{% else %}Activar{% endif %}
-          </button>
-        </form>
-      </div>
-
+  <div class="tabla-body" id="tabla-trabajadores-body" role="rowgroup">
+    <div class="tabla-vacia" id="estado-cargando-trabajadores">
+      <p>Cargando trabajadores...</p>
     </div>
-    {% endfor %}
-    {% else %}
-    <div class="tabla-vacia">
-      <p>No hay trabajadores registrados{% if busqueda or filtro_estado %} con ese criterio{% endif %}.</p>
-    </div>
-    {% endif %}
+  </div>
+
+  <div class="tabla-vacia" id="mensaje-sin-resultados" hidden role="status">
+    <p>No se encontraron resultados</p>
   </div>
 
 </div>
+
+<script>
+  window.TRABAJADORES_URLS = {
+    api: "/api/trabajadores/",
+    detalle: "{% url 'trabajadores:detalle' 0 %}".replace("/0/", "/{id}/"),
+    editar: "{% url 'trabajadores:editar' 0 %}".replace("/0/", "/{id}/"),
+    estado: "{% url 'trabajadores:estado' 0 %}".replace("/0/", "/{id}/"),
+    csrf: "{{ csrf_token }}",
+  };
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'trabajadores/js/filtro_trabajadores.js' %}"></script>
 {% endblock %}

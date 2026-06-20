@@ -1,0 +1,41 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
+
+{% block topbar_acciones %}
+<form method="get" action="{% url 'trabajadores_ext:auditoria' %}" style="display:flex; gap:8px; flex-wrap:wrap;">
+  <input type="search" name="q" value="{{ busqueda }}" placeholder="Buscar..." class="form-input">
+  <select name="accion" class="form-input" onchange="this.form.submit()">
+    <option value="">Todas las acciones</option>
+    {% for val, label in acciones %}
+    <option value="{{ val }}" {% if filtro_accion == val %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</form>
+{% endblock %}
+
+{% block contenido %}
+<div class="tabla-card" role="region">
+  <div class="tabla-header-row" role="row">
+    <span>Fecha</span>
+    <span>Acción</span>
+    <span>Trabajador</span>
+    <span>Usuario</span>
+    <span>Detalle</span>
+  </div>
+  <div class="tabla-body">
+    {% for r in registros %}
+    <div class="tabla-fila" role="row">
+      <div><span class="celda-email">{{ r.creado_en|date:"d/m/Y H:i" }}</span></div>
+      <div><span class="badge-rol">{{ r.get_accion_display }}</span></div>
+      <div><span class="celda-email">{{ r.trabajador|default:"—" }}</span></div>
+      <div><span class="celda-email">{{ r.usuario.username|default:"—" }}</span></div>
+      <div><span class="celda-email">{{ r.valor_nuevo|default:r.ruta|truncatechars:60 }}</span></div>
+    </div>
+    {% empty %}
+    <div class="tabla-vacia"><p>Sin registros.</p></div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "usuarios",
     "trabajadores",
+    "trabajadores_ext",
 ]
 
 MIDDLEWARE = [
@@ -42,6 +43,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "usuarios.middleware.BloqueoCuentaMiddleware",
+    "trabajadores.middleware.ArchivoPrivadoMiddleware",
+     "trabajadores_ext.middleware.AuditoriaTrabajadorMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -58,6 +61,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "usuarios.context_processors.permisos_globales",
             ],
         },
     },

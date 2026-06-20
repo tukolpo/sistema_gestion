@@ -20,7 +20,5 @@ urlpatterns = [
         views.descargar_documento,
         name="descargar_documento",
     ),
-    path("exportar/excel/", views.exportar_excel, name="exportar_excel"),
-    path("exportar/csv/", views.exportar_csv, name="exportar_csv"),
-    path("exportar/pdf/", views.exportar_pdf, name="exportar_pdf"),
+    path("perfil-publico/<uuid:trabajador_uuid>/", views.perfil_publico_trabajador, name="perfil_publico"),
 ]

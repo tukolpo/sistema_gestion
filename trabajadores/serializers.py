@@ -1,6 +1,7 @@
 # trabajadores/serializers.py
 # Serializers API CRUD (1.2)
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
@@ -51,12 +52,23 @@ class DocumentoTrabajadorSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+def calcular_antiguedad(fecha_ingreso):
+    if not fecha_ingreso:
+        return None
+    hoy = timezone.now().date()
+    anios = hoy.year - fecha_ingreso.year
+    if (hoy.month, hoy.day) < (fecha_ingreso.month, fecha_ingreso.day):
+        anios -= 1
+    return max(anios, 0)
+
+
 class TrabajadorSerializer(serializers.ModelSerializer):
     cargo_nombre = serializers.CharField(source="cargo.nombre", read_only=True)
     especialidad_nombre = serializers.CharField(
         source="especialidad.nombre", read_only=True, allow_null=True
     )
     esta_activo = serializers.BooleanField(read_only=True)
+    antiguedad = serializers.SerializerMethodField()
     documentos = DocumentoTrabajadorSerializer(many=True, read_only=True)
 
     class Meta:
@@ -68,6 +80,7 @@ class TrabajadorSerializer(serializers.ModelSerializer):
             "cedula",
             "fecha_nacimiento",
             "fecha_ingreso",
+            "antiguedad",
             "departamento",
             "cargo",
             "cargo_nombre",
@@ -85,6 +98,9 @@ class TrabajadorSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("fecha_creacion", "fecha_actualizacion")
 
+    def get_antiguedad(self, obj):
+        return calcular_antiguedad(obj.fecha_ingreso)
+
     def validate_foto(self, foto):
         validar_archivo_foto(foto)
         return foto
@@ -93,6 +109,33 @@ class TrabajadorSerializer(serializers.ModelSerializer):
         if valor not in Trabajador.Estado.values:
             raise serializers.ValidationError("Estado no válido.")
         return valor
+
+
+class TrabajadorListSerializer(serializers.ModelSerializer):
+    cargo_nombre = serializers.CharField(source="cargo.nombre", read_only=True)
+    esta_activo = serializers.BooleanField(read_only=True)
+    antiguedad = serializers.SerializerMethodField()
+    estado_display = serializers.CharField(source="get_estado_display", read_only=True)
+
+    class Meta:
+        model = Trabajador
+        fields = (
+            "id",
+            "nombre",
+            "apellido",
+            "cedula",
+            "departamento",
+            "cargo",
+            "cargo_nombre",
+            "estado",
+            "estado_display",
+            "esta_activo",
+            "fecha_ingreso",
+            "antiguedad",
+        )
+
+    def get_antiguedad(self, obj):
+        return calcular_antiguedad(obj.fecha_ingreso)
 
 
 class TrabajadorEstadoSerializer(serializers.Serializer):

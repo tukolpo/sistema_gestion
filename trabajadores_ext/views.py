@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 
-from usuarios.constants import NIVEL_GESTION_USUARIOS
+from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
 
 from trabajadores.models import Trabajador
@@ -96,7 +96,7 @@ def vista_perfil_publico(request, token):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
 def vista_auditoria(request):
     registros = AuditoriaTrabajador.objects.select_related("trabajador", "usuario")
     q = request.GET.get("q", "").strip()
@@ -119,6 +119,6 @@ def vista_auditoria(request):
             "filtro_accion": accion,
             "acciones": AuditoriaTrabajador.Accion.choices,
             "titulo": "Auditoría de trabajadores",
-            "seccion_activa": "trabajadores",
+            "seccion_activa": "auditoria",
         },
     )

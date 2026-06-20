@@ -1,21 +1,25 @@
 # trabajadores/api_views.py
-# Endpoints API CRUD (1.2)
+# Endpoints API CRUD (1.2) + Motor de filtrado (Módulo 3, Tarea 1)
 
 from rest_framework import status, viewsets
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from usuarios.constants import NIVEL_GESTION_USUARIOS
 from usuarios.permissions import TieneJerarquiaMinima
 
+from trabajadores.filters import aplicar_filtros_trabajadores
 from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
 from trabajadores.serializers import (
     CargoSerializer,
     DocumentoTrabajadorSerializer,
     EspecialidadSerializer,
     TrabajadorEstadoSerializer,
+    TrabajadorListSerializer,
     TrabajadorSerializer,
 )
 from trabajadores.utils import cambiar_estado_trabajador
@@ -43,17 +47,17 @@ class TrabajadorViewSet(viewsets.ModelViewSet):
     )
     serializer_class = TrabajadorSerializer
     permission_classes = [IsAuthenticated, PermisoGestionTrabajadores]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return TrabajadorListSerializer
+        return TrabajadorSerializer
 
     def get_queryset(self):
         qs = super().get_queryset()
-        estado = self.request.query_params.get("estado")
-        if estado:
-            qs = qs.filter(estado=estado)
-        cargo_id = self.request.query_params.get("cargo")
-        if cargo_id:
-            qs = qs.filter(cargo_id=cargo_id)
-        return qs
+        return aplicar_filtros_trabajadores(qs, self.request.query_params)
 
     @action(detail=True, methods=["post"], url_path="estado")
     def cambiar_estado(self, request, pk=None):

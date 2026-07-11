@@ -37,10 +37,10 @@
          id="nav-roles">
         Roles y Permisos
       </a>
-      <a href="#"
-         class="nav-item {% if seccion_activa == 'guardias' %}activo{% endif %}"
-         id="nav-guardias">
-        Guardias
+      <a href="{% url 'guardias:gestion_guardias' %}"
+        class="nav-item {% if seccion_activa == 'guardias' %}activo{% endif %}"
+        id="nav-guardias">
+         Guardias
       </a>
       <a href="{% url 'trabajadores:lista' %}"
          class="nav-item {% if seccion_activa == 'trabajadores' %}activo{% endif %}"

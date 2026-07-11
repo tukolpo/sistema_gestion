@@ -1,0 +1,95 @@
+{% extends "usuarios/base.html" %}
+{% load static %}
+
+{% block titulo %}Gestión de Guardias{% endblock %}
+{% block topbar_titulo %}Gestión de Guardias{% endblock %}
+
+{% block contenido %}
+
+
+<h2 style="margin-bottom:12px;">Personal Disponible</h2>
+<div class="tabla-card" role="region" aria-label="Personal disponible para asignar">
+  <div class="tabla-header-row" role="row">
+    <span role="columnheader">Funcionario</span>
+    <span role="columnheader">Estado</span>
+  </div>
+  <div class="tabla-body" role="rowgroup">
+    {% for persona in disponibles %}
+    <div class="tabla-fila" role="row">
+      <div class="celda-usuario" role="cell">
+        <div class="avatar-mini" aria-hidden="true">{{ persona.nombre|first|upper }}</div>
+        <span class="celda-nombre">{{ persona.nombre }}</span>
+      </div>
+      <div role="cell">
+        <span class="badge-rol">Disponible</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+<h2 style="margin:24px 0 12px;">Asignar Turno</h2>
+<div class="tabla-card" style="padding:24px;">
+  <form id="form-asignacion" method="post" novalidate aria-label="Formulario de asignación de turno">
+    {% csrf_token %}
+
+    <div class="form-group">
+      <label for="id_turno">Turno</label>
+      <select id="id_turno" name="turno">
+        {% for turno in turnos %}
+        <option value="{{ turno }}">{{ turno }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="id_funcionario">Funcionario</label>
+      <select id="id_funcionario" name="funcionario">
+        {% for persona in disponibles %}
+        <option value="{{ persona.nombre }}">{{ persona.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="id_fecha">Fecha</label>
+      <input type="date" id="id_fecha" name="fecha">
+    </div>
+
+    <button type="submit" class="btn-accion btn-guardar" id="btn-asignar">
+      Asignar
+    </button>
+  </form>
+</div>
+
+<!-- ═══  Cronograma Semanal  ═══ -->
+<h2 style="margin:24px 0 12px;">Cronograma Semanal</h2>
+<div class="tabla-card" role="region" aria-label="Cronograma semanal de guardias">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead>
+      <tr style="background:var(--color-azul, #6f9fd8); color:white;">
+        <th style="padding:12px; text-align:left;">Turno</th>
+        {% for dia in dias %}
+        <th style="padding:12px; text-align:left;">{{ dia }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for turno in turnos %}
+      <tr>
+        <td style="padding:12px;"><strong>{{ turno }}</strong></td>
+        {% for dia in dias %}
+        <td style="padding:12px;">—</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<button class="btn-accion btn-guardar" id="btn-aprobar" style="margin-top:16px;">
+  Aprobar Cronograma
+</button>
+
+{% endblock %}

@@ -14,11 +14,11 @@
 
 /* ─── Variables CSS ─────────────────────────────── */
 :root {
-  --color-burdeos:       #6D0021;
-  --color-burdeos-dark:  #4a0016;
-  --color-burdeos-light: #8B0029;
-  --color-rosa:          #E8C5C5;
-  --color-rosa-light:    #F2DADA;
+  --color-burdeos:       #7EAEDF;
+  --color-burdeos-dark:  #5B8AB8;
+  --color-burdeos-light: #A3C9EE;
+  --color-rosa:          #DCEAFC;
+  --color-rosa-light:    #EDF4FD;
   --color-blanco:        #FFFFFF;
   --color-gris-claro:    #F5F5F5;
   --color-gris-medio:    #E0E0E0;

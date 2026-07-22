@@ -10,7 +10,8 @@ urlpatterns = [
     path("trabajadores/", include("trabajadores.urls", namespace="trabajadores")),
     path("trabajadores/", include("trabajadores_ext.urls", namespace="trabajadores_ext")),
     path("", include("usuarios.urls", namespace="usuarios")),
-   path("guardias/", include("guardias.urls")),
+    path("api/guardias/", include("guardias.api_urls")),
+    path("guardias/", include("guardias.urls")),
 
 ]
 

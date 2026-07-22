@@ -4,30 +4,41 @@
 {% block titulo %}Gestión de Guardias{% endblock %}
 {% block topbar_titulo %}Gestión de Guardias{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'guardias/css/guardias.css' %}">
+{% endblock %}
+
 {% block contenido %}
 
-
 <h2 style="margin-bottom:12px;">Personal Disponible</h2>
-<div class="tabla-card" role="region" aria-label="Personal disponible para asignar">
-  <div class="tabla-header-row" role="row">
-    <span role="columnheader">Funcionario</span>
-    <span role="columnheader">Estado</span>
-  </div>
-  <div class="tabla-body" role="rowgroup">
-    {% for persona in disponibles %}
-    <div class="tabla-fila" role="row">
-      <div class="celda-usuario" role="cell">
-        <div class="avatar-mini" aria-hidden="true">{{ persona.nombre|first|upper }}</div>
-        <span class="celda-nombre">{{ persona.nombre }}</span>
-      </div>
-      <div role="cell">
-        <span class="badge-rol">Disponible</span>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+<div class="disponibilidad-toolbar">
+  <label for="filtro-fecha-disponibilidad" class="disponibilidad-fecha-label">
+    Consultar para:
+    <input type="date" id="filtro-fecha-disponibilidad" class="form-input" aria-label="Fecha de consulta de disponibilidad">
+  </label>
+  <button type="button" class="btn-accion btn-guardar" id="btn-recargar-disponibilidad">
+    Recargar
+  </button>
 </div>
 
+<div class="tabla-card" role="region" aria-label="Personal disponible para asignar">
+  <div class="tabla-header-row disponibilidad-header" role="row">
+    <span role="columnheader">Funcionario</span>
+    <span role="columnheader">Cédula</span>
+    <span role="columnheader">Cargo</span>
+    <span role="columnheader">Estado</span>
+  </div>
+  <div class="tabla-body" id="tabla-disponibilidad-body" role="rowgroup">
+    <div class="tabla-fila disponibilidad-cargando" role="row">
+      <div role="cell" style="grid-column: 1 / -1; text-align:center; padding:16px;">
+        Cargando disponibilidad…
+      </div>
+    </div>
+  </div>
+  <div id="mensaje-sin-funcionarios" class="disponibilidad-vacio" hidden>
+    No hay funcionarios registrados.
+  </div>
+</div>
 
 <h2 style="margin:24px 0 12px;">Asignar Turno</h2>
 <div class="tabla-card" style="padding:24px;">
@@ -45,10 +56,8 @@
 
     <div class="form-group">
       <label for="id_funcionario">Funcionario</label>
-      <select id="id_funcionario" name="funcionario">
-        {% for persona in disponibles %}
-        <option value="{{ persona.nombre }}">{{ persona.nombre }}</option>
-        {% endfor %}
+      <select id="id_funcionario" name="funcionario" disabled>
+        <option value="">— Seleccione un funcionario disponible —</option>
       </select>
     </div>
 
@@ -63,7 +72,6 @@
   </form>
 </div>
 
-<!-- ═══  Cronograma Semanal  ═══ -->
 <h2 style="margin:24px 0 12px;">Cronograma Semanal</h2>
 <div class="tabla-card" role="region" aria-label="Cronograma semanal de guardias">
   <table style="width:100%; border-collapse:collapse;">
@@ -92,4 +100,13 @@
   Aprobar Cronograma
 </button>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.GUARDIAS_URLS = {
+    disponibilidad: "{{ api_disponibilidad_url }}",
+  };
+</script>
+<script src="{% static 'guardias/js/disponibilidad.js' %}"></script>
 {% endblock %}

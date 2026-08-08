@@ -1,0 +1,96 @@
+{% extends 'usuarios/base.html' %}
+
+{% block titulo %}Cronograma Semanal{% endblock %}
+{% block topbar_titulo %}Cronograma Semanal de Guardias{% endblock %}
+
+{% block topbar_acciones %}
+<a href="{% url 'guardias:asignar_turno' %}" class="btn btn-primario">+ Asignar Turno</a>
+{% endblock %}
+
+{% block contenido %}
+<div class="card" style="padding: 20px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h2>Semana del {{ start_date|date:"d M Y" }} al {{ end_date|date:"d M Y" }}</h2>
+            <p>
+                Estado de aprobación: 
+                {% if aprobacion.aprobado %}
+                    <strong style="color: green;">✓ Aprobado ({{ aprobacion.fecha_aprobacion|date:"d/m/Y H:i" }})</strong>
+                {% else %}
+                    <strong style="color: orange;">⚠ Pendiente de aprobación</strong>
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="?fecha={{ semana_anterior }}" class="btn btn-secundario" style="margin-right: 5px;">&laquo; Semana Anterior</a>
+            <a href="?fecha={{ semana_siguiente }}" class="btn btn-secundario">Semana Siguiente &raquo;</a>
+        </div>
+    </div>
+
+    <!-- Requisito 3.3: Mostrar el cronograma y aprobaciones del gerente -->
+    <div class="table-responsive">
+        <table class="table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f8f9fa;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">Trabajador</th>
+                    {% for dia in dias %}
+                    <th style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                        {{ dia|date:"l" }}<br>
+                        <small>{{ dia|date:"d/m" }}</small>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% regroup asignaciones|dictsort:"trabajador.nombre" by trabajador as trabajador_list %}
+                
+                {% for trabajador_asignaciones in trabajador_list %}
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">
+                        {{ trabajador_asignaciones.grouper }}
+                    </td>
+                    
+                    {% for dia in dias %}
+                    <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                        {% for asignacion in trabajador_asignaciones.list %}
+                            {% if asignacion.fecha == dia %}
+                                <div style="background-color: #e9ecef; border-radius: 4px; padding: 5px; font-size: 0.9em; margin-bottom: 4px;">
+                                    <strong>{{ asignacion.guardia.nombre_turno }}</strong><br>
+                                    {{ asignacion.guardia.hora_inicio|time:"H:i" }} - {{ asignacion.guardia.hora_fin|time:"H:i" }}
+                                    {% if asignacion.observaciones %}
+                                        <br><small style="color: #666;" title="{{ asignacion.observaciones }}">📝</small>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="padding: 20px; text-align: center; color: #777;">
+                        No hay turnos asignados para esta semana.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not aprobacion.aprobado %}
+    <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; text-align: center;">
+        <h3>Aprobación de Gerencia</h3>
+        <p>Como Gerente de guardias, debes revisar y aprobar este cronograma.</p>
+        <form method="post" action="{% url 'guardias:aprobar_cronograma' cronograma.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="fecha_referencia" value="{{ start_date|date:'Y-m-d' }}">
+            <button type="submit" class="btn btn-primario" style="background-color: #28a745;">
+                Aprobar Cronograma Semanal
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

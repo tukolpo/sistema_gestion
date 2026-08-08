@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Entornos virtuales
+venv/
+env/
+venv_old/
+
+# Base de datos local
+*.sqlite3
+db.sqlite3
+
+# Django
+staticfiles/
+media/
+private_media/
+
+# Variables de entorno
+.env
+.env.*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Referencia SQL (opcional: quitar si el equipo versiona solo migraciones)
+# base_de_datos_completa.sql

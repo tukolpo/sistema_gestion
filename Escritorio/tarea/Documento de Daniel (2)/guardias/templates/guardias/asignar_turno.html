@@ -1,0 +1,67 @@
+{% extends 'usuarios/base.html' %}
+
+{% block titulo %}Asignar Turno{% endblock %}
+{% block topbar_titulo %}Asignación de Turnos{% endblock %}
+
+{% block topbar_acciones %}
+<a href="{% url 'guardias:cronograma_semanal' %}" class="btn btn-secundario">Ver Cronograma</a>
+{% endblock %}
+
+{% block contenido %}
+<div class="card card-formulario" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2>Asignar nuevo turno a trabajador</h2>
+    <p style="color: #666; margin-bottom: 20px;">
+        Selecciona el trabajador y el turno correspondiente. El sistema no permitirá asignar 
+        múltiples turnos a un mismo trabajador en la misma fecha.
+    </p>
+
+    <form method="post" action="{% url 'guardias:asignar_turno' %}">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alerta alerta-error">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="{{ form.trabajador.id_for_label }}">Trabajador:</label>
+            {{ form.trabajador }}
+            {% if form.trabajador.errors %}
+                <div class="alerta alerta-error" style="margin-top: 5px; padding: 5px;">{{ form.trabajador.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="{{ form.guardia.id_for_label }}">Turno (Guardia):</label>
+            {{ form.guardia }}
+            {% if form.guardia.errors %}
+                <div class="alerta alerta-error" style="margin-top: 5px; padding: 5px;">{{ form.guardia.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="{{ form.fecha.id_for_label }}">Fecha:</label>
+            {{ form.fecha }}
+            {% if form.fecha.errors %}
+                <div class="alerta alerta-error" style="margin-top: 5px; padding: 5px;">{{ form.fecha.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="{{ form.observaciones.id_for_label }}">Observaciones (opcional):</label>
+            {{ form.observaciones }}
+            {% if form.observaciones.errors %}
+                <div class="alerta alerta-error" style="margin-top: 5px; padding: 5px;">{{ form.observaciones.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primario" style="flex: 1;">Asignar Turno</button>
+            <button type="reset" class="btn btn-secundario">Limpiar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

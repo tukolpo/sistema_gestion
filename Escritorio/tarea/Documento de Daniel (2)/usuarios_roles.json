@@ -1,0 +1,42 @@
+[
+{
+    "model": "usuarios.rol",
+    "pk": 1,
+    "fields": {
+        "nombre": "Administrador",
+        "nivel_jerarquia": 1,
+        "descripcion": "Control total del sistema",
+        "fecha_creacion": "2026-05-26T00:41:48.847Z"
+    }
+},
+{
+    "model": "usuarios.rol",
+    "pk": 2,
+    "fields": {
+        "nombre": "Gerente de guardias",
+        "nivel_jerarquia": 2,
+        "descripcion": "Gestión de horarios y asignaciones",
+        "fecha_creacion": "2026-05-26T00:41:48.847Z"
+    }
+},
+{
+    "model": "usuarios.rol",
+    "pk": 3,
+    "fields": {
+        "nombre": "Trabajador",
+        "nivel_jerarquia": 3,
+        "descripcion": "Personal administrativo u obrero",
+        "fecha_creacion": "2026-05-26T00:41:48.847Z"
+    }
+},
+{
+    "model": "usuarios.rol",
+    "pk": 4,
+    "fields": {
+        "nombre": "Funcionario",
+        "nivel_jerarquia": 4,
+        "descripcion": "Personal de seguridad o funcionario público",
+        "fecha_creacion": "2026-05-26T00:41:48.847Z"
+    }
+}
+]

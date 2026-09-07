@@ -5,15 +5,53 @@
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
 {% block contenido %}
-<div class="tabla-card" style="padding: 24px;">
-    <p>Hola, <strong>{{ user.first_name|default:user.username }}</strong>.</p>
-    <p>
-        Tu rol actual es
-        <strong>{{ user.rol.nombre|default:"Sin rol" }}</strong>.
+
+<p style="margin-bottom:20px;">Hola, <strong>{{ user.first_name|default:user.username }}</strong>.
+  Tu rol actual es <strong>{{ user.rol.nombre|default:"Sin rol" }}</strong>.</p>
+
+{% if puede_ver_dashboard_general %}
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:20px;">
+
+  <div class="tabla-card" style="padding:20px;">
+    <h3 style="margin-top:0;"><i class="fas fa-users me-1 text-primary"></i> Resumen de Personal</h3>
+    <p style="font-size:2rem; font-weight:700; margin:8px 0 4px;">{{ total_trabajadores }}</p>
+    <p style="color:var(--color-texto-suave); font-size:0.85rem;">
+      {{ activos }} activo{{ activos|pluralize }} · {{ inactivos }} inactivo{{ inactivos|pluralize }}
     </p>
-    <p style="color: var(--color-texto-suave); font-size: 0.9rem;">
-        No tienes acceso al panel de gestión de usuarios.
-        Si necesitas más permisos, contacta al administrador del sistema.
-    </p>
+  </div>
+
+  <div class="tabla-card" style="padding:20px;">
+    <h3 style="margin-top:0;"><i class="fas fa-briefcase me-1 text-primary"></i> Distribución por Cargo</h3>
+    {% for item in personal_por_cargo %}
+    <div style="display:flex; justify-content:space-between; padding:4px 0; font-size:0.9rem;">
+      <span>{{ item.cargo__nombre|default:"Sin cargo" }}</span>
+      <strong>{{ item.total }}</strong>
+    </div>
+    {% empty %}
+    <p style="color:var(--color-texto-suave); font-size:0.85rem;">Sin datos disponibles.</p>
+    {% endfor %}
+  </div>
+
+  <div class="tabla-card" style="padding:20px;">
+    <h3 style="margin-top:0;"><i class="fas fa-umbrella-beach me-1 text-primary"></i> Vacaciones Solicitadas</h3>
+    <p style="font-size:2rem; font-weight:700; margin:8px 0 4px;">{{ vacaciones_pendientes }}</p>
+    <p style="color:var(--color-texto-suave); font-size:0.85rem;">Solicitudes pendientes por revisar</p>
+    <a href="{% url 'vacaciones:gestion_vacaciones' %}" class="btn-accion btn-guardar" style="margin-top:8px; display:inline-block;">Ver vacaciones</a>
+  </div>
+
+  <div class="tabla-card" style="padding:20px;">
+    <h3 style="margin-top:0;"><i class="fas fa-id-badge me-1 text-primary"></i> Portal de Trabajador</h3>
+    <p style="color:var(--color-texto-suave); font-size:0.85rem;">Accede al listado completo de trabajadores del sistema.</p>
+    <a href="{% url 'trabajadores:lista' %}" class="btn-accion btn-guardar" style="margin-top:8px; display:inline-block;">Ir a Trabajadores</a>
+  </div>
+
 </div>
+{% else %}
+<div class="tabla-card" style="padding: 24px;">
+  <p style="color: var(--color-texto-suave); font-size: 0.9rem;">
+    No tienes acceso al panel de gestión. Si necesitas más permisos, contacta al administrador del sistema.
+  </p>
+</div>
+{% endif %}
+
 {% endblock %}

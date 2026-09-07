@@ -10,43 +10,43 @@
 
 {% block contenido %}
 
-<h2 style="margin-bottom:12px;">Personal Disponible</h2>
+<h2 style="margin-bottom:12px;"><i class="fas fa-users-viewfinder me-2 text-primary"></i> Personal Disponible</h2>
 <div class="disponibilidad-toolbar">
   <label for="filtro-fecha-disponibilidad" class="disponibilidad-fecha-label">
-    Consultar para:
+    <i class="fas fa-calendar-day me-1 text-muted"></i> Consultar para:
     <input type="date" id="filtro-fecha-disponibilidad" class="form-input" aria-label="Fecha de consulta de disponibilidad">
   </label>
   <button type="button" class="btn-accion btn-guardar" id="btn-recargar-disponibilidad">
-    Recargar
+    <i class="fas fa-sync-alt me-1"></i> Recargar
   </button>
 </div>
 
 <div class="tabla-card" role="region" aria-label="Personal disponible para asignar">
   <div class="tabla-header-row disponibilidad-header" role="row">
-    <span role="columnheader">Funcionario</span>
-    <span role="columnheader">Cédula</span>
-    <span role="columnheader">Cargo</span>
-    <span role="columnheader">Estado</span>
+    <span role="columnheader"><i class="fas fa-user me-1"></i> Funcionario</span>
+    <span role="columnheader"><i class="fas fa-id-card me-1"></i> Cédula</span>
+    <span role="columnheader"><i class="fas fa-briefcase me-1"></i> Cargo</span>
+    <span role="columnheader"><i class="fas fa-circle-check me-1"></i> Estado</span>
   </div>
   <div class="tabla-body" id="tabla-disponibilidad-body" role="rowgroup">
     <div class="tabla-fila disponibilidad-cargando" role="row">
       <div role="cell" style="grid-column: 1 / -1; text-align:center; padding:16px;">
-        Cargando disponibilidad…
+        <i class="fas fa-spinner fa-spin me-2"></i> Cargando disponibilidad…
       </div>
     </div>
   </div>
   <div id="mensaje-sin-funcionarios" class="disponibilidad-vacio" hidden>
-    No hay funcionarios registrados.
+    <i class="fas fa-info-circle me-1"></i> No hay funcionarios registrados.
   </div>
 </div>
 
-<h2 style="margin:24px 0 12px;">Asignar Turno</h2>
+<h2 style="margin:24px 0 12px;"><i class="fas fa-user-clock me-2 text-primary"></i> Asignar Turno</h2>
 <div class="tabla-card" style="padding:24px;">
   <form id="form-asignacion" method="post" novalidate aria-label="Formulario de asignación de turno">
     {% csrf_token %}
 
     <div class="form-group">
-      <label for="id_turno">Turno</label>
+      <label for="id_turno"><i class="fas fa-clock me-1 text-secondary"></i> Turno</label>
       <select id="id_turno" name="turno">
         {% for turno in turnos %}
         <option value="{{ turno }}">{{ turno }}</option>
@@ -55,50 +55,54 @@
     </div>
 
     <div class="form-group">
-      <label for="id_funcionario">Funcionario</label>
+      <label for="id_funcionario"><i class="fas fa-user-check me-1 text-secondary"></i> Funcionario</label>
       <select id="id_funcionario" name="funcionario" disabled>
         <option value="">— Seleccione un funcionario disponible —</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="id_fecha">Fecha</label>
+      <label for="id_fecha"><i class="fas fa-calendar-alt me-1 text-secondary"></i> Fecha</label>
       <input type="date" id="id_fecha" name="fecha">
     </div>
 
     <button type="submit" class="btn-accion btn-guardar" id="btn-asignar">
-      Asignar
+      <i class="fas fa-check me-1"></i> Asignar
     </button>
   </form>
 </div>
 
-<h2 style="margin:24px 0 12px;">Cronograma Semanal</h2>
+<h2 style="margin:24px 0 12px;"><i class="fas fa-calendar-week me-2 text-primary"></i> Cronograma Semanal</h2>
 <div class="tabla-card" role="region" aria-label="Cronograma semanal de guardias">
   <table style="width:100%; border-collapse:collapse;">
     <thead>
       <tr style="background:var(--color-azul, #6f9fd8); color:white;">
-        <th style="padding:12px; text-align:left;">Turno</th>
+        <th style="padding:12px; text-align:left;"><i class="fas fa-business-time me-1"></i> Turno</th>
         {% for dia in dias %}
         <th style="padding:12px; text-align:left;">{{ dia }}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for turno in turnos %}
-      <tr>
-        <td style="padding:12px;"><strong>{{ turno }}</strong></td>
-        {% for dia in dias %}
-        <td style="padding:12px;">—</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
+  {% for turno in turnos %}
+  <tr>
+    <td style="padding:12px;"><strong>{{ turno }}</strong></td>
+    {% for dia in dias %}
+    <td style="padding:12px;" id="celda-{{ turno }}-{{ dia }}">—</td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody>
   </table>
 </div>
 
 <button class="btn-accion btn-guardar" id="btn-aprobar" style="margin-top:16px;">
-  Aprobar Cronograma
+  <i class="fas fa-clipboard-check me-1"></i> Aprobar Cronograma
 </button>
+
+<a href="{{ api_reporte_url }}" class="btn-accion btn-guardar" id="btn-reporte" style="margin-top:16px; margin-left:8px;">
+  <i class="fas fa-file-excel me-1"></i> Descargar Reporte
+</a>
 
 {% endblock %}
 
@@ -106,7 +110,10 @@
 <script>
   window.GUARDIAS_URLS = {
     disponibilidad: "{{ api_disponibilidad_url }}",
+    asignar: "{{ api_asignar_url }}",
+    cronograma: "{{ api_cronograma_url }}",
   };
 </script>
 <script src="{% static 'guardias/js/disponibilidad.js' %}"></script>
+<script src="{% static 'guardias/js/cronograma.js' %}"></script>
 {% endblock %}

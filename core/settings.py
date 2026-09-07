@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "trabajadores",
     "trabajadores_ext",
     "guardias",
+    "vacaciones",
 ]
 
 MIDDLEWARE = [

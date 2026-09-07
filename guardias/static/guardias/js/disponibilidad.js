@@ -1,7 +1,4 @@
-/**
- * disponibilidad.js
- * Módulo 4 — Tarea 2: consulta y visualización de disponibilidad de funcionarios.
- */
+
 "use strict";
 
 (function () {
@@ -83,7 +80,7 @@
     );
   }
 
-  function actualizarSelectFuncionarios(funcionarios) {
+ function actualizarSelectFuncionarios(funcionarios) {
     var select = document.getElementById("id_funcionario");
     if (!select) {
       return;

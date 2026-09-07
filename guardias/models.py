@@ -60,3 +60,27 @@ class PermisoLaboral(models.Model):
 
     def __str__(self):
         return f"Permiso {self.trabajador} ({self.fecha_inicio} – {self.fecha_fin})"
+
+class GuardiaTurno(models.Model):
+    class TurnoOpcion(models.TextChoices):
+        MANANA = "MANANA", "Mañana"
+        TARDE = "TARDE", "Tarde"
+        NOCHE = "NOCHE", "Noche"
+
+    trabajador = models.ForeignKey(
+        "trabajadores.Trabajador",
+        on_delete=models.CASCADE,
+        related_name="guardias_asignadas",
+    )
+    fecha = models.DateField()
+    turno = models.CharField(max_length=10, choices=TurnoOpcion.choices)
+    aprobado = models.BooleanField(default=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Guardia y Turno"
+        verbose_name_plural = "Guardias y Turnos"
+        unique_together = ("trabajador", "fecha", "turno")
+
+    def __str__(self):
+        return f"{self.trabajador} - {self.fecha} ({self.get_turno_display()})"

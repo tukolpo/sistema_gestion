@@ -1,0 +1,48 @@
+{% extends "usuarios/base.html" %}
+{% load static %}
+{% block titulo %}Vacaciones{% endblock %}
+{% block topbar_titulo %}Gestión de Vacaciones{% endblock %}
+{% block contenido %}
+
+<h2 style="margin-bottom:12px;"><i class="fas fa-umbrella-beach me-2 text-primary"></i> Días Disponibles por Trabajador</h2>
+
+<div class="tabla-card" role="region" aria-label="Días disponibles por trabajador">
+  <div class="tabla-header-row" role="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+    <span role="columnheader"><i class="fas fa-user me-1"></i> Trabajador</span>
+    <span role="columnheader"><i class="fas fa-hourglass-half me-1"></i> Años trabajados</span>
+    <span role="columnheader"><i class="fas fa-calendar-check me-1"></i> Días totales</span>
+    <span role="columnheader"><i class="fas fa-calendar-minus me-1"></i> Días usados</span>
+    <span role="columnheader"><i class="fas fa-circle-check me-1"></i> Días disponibles</span>
+  </div>
+  <div class="tabla-body" role="rowgroup">
+    {% for item in trabajadores_con_dias %}
+    <div class="tabla-fila" role="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+      <div role="cell" class="celda-usuario">
+        <div class="avatar-mini" aria-hidden="true">{{ item.trabajador.nombre|first|upper }}</div>
+        <span class="celda-nombre">{{ item.trabajador }}</span>
+      </div>
+      <div role="cell"><span class="celda-email">{{ item.anios_trabajados }}</span></div>
+      <div role="cell"><span class="celda-email">{{ item.dias_totales }}</span></div>
+      <div role="cell"><span class="celda-email">{{ item.dias_usados }}</span></div>
+      <div role="cell"><span class="badge-rol badge-disponible">{{ item.dias_disponibles }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<h2 style="margin:24px 0 12px;"><i class="fas fa-file-signature me-2 text-primary"></i> Nueva Solicitud de Vacaciones</h2>
+<div class="tabla-card" style="padding:24px; max-width:500px;">
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-paper-plane me-1"></i> Solicitar</button>
+  </form>
+</div>
+
+{% endblock %}

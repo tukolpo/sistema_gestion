@@ -4,9 +4,9 @@
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
 {% block topbar_acciones %}
-<a href="{% url 'trabajadores_ext:credencial_qr' trabajador.id %}" class="btn-accion">Ver credencial QR</a>
-<a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion btn-guardar">Editar perfil</a>
-<a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;">Volver</a>
+<a href="{% url 'trabajadores_ext:credencial_qr' trabajador.id %}" class="btn-accion"><i class="fas fa-qrcode me-1"></i> Ver credencial QR</a>
+<a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion btn-guardar"><i class="fas fa-user-edit me-1"></i> Editar perfil</a>
+<a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;"><i class="fas fa-arrow-left me-1"></i> Volver</a>
 {% endblock %}
 
 {% block contenido %}
@@ -23,7 +23,7 @@
     {% endif %}
 
     <h2 style="margin:0 0 8px;">{{ trabajador.nombre }} {{ trabajador.apellido }}</h2>
-    <p style="color:#666; margin:0 0 12px;">{{ trabajador.cedula }}</p>
+    <p style="color:#666; margin:0 0 12px;"><i class="fas fa-id-card me-1"></i> {{ trabajador.cedula }}</p>
 
     <span class="badge-rol {% if not trabajador.esta_activo %}badge-sin-rol{% endif %}">
       {{ trabajador.get_estado_display }}
@@ -33,40 +33,40 @@
       {% csrf_token %}
       <button type="submit" class="btn-accion"
         style="background:{% if trabajador.esta_activo %}#8b1a2b{% else %}#2b6b3a{% endif %}; color:white; width:100%;">
-        {% if trabajador.esta_activo %}Marcar inactivo{% else %}Marcar activo{% endif %}
+        {% if trabajador.esta_activo %}<i class="fas fa-user-slash me-1"></i> Marcar inactivo{% else %}<i class="fas fa-user-check me-1"></i> Marcar activo{% endif %}
       </button>
     </form>
   </div>
 
   <div>
     <div class="tabla-card" style="padding: 24px; margin-bottom: 24px;">
-      <h3 style="margin-top:0;">Perfil laboral</h3>
+      <h3 style="margin-top:0;"><i class="fas fa-briefcase me-1"></i> Perfil laboral</h3>
       <dl style="display:grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin:0;">
-        <dt>Cargo</dt><dd>{{ trabajador.cargo }}</dd>
-        <dt>Especialidad</dt><dd>{{ trabajador.especialidad|default:"—" }}</dd>
-        <dt>Ingreso</dt><dd>{{ trabajador.fecha_ingreso|default:"—" }}</dd>
-        <dt>Teléfono</dt><dd>{{ trabajador.telefono|default:"—" }}</dd>
-        <dt>Email</dt><dd>{{ trabajador.email|default:"—" }}</dd>
+        <dt><i class="fas fa-user-tie me-1"></i> Cargo</dt><dd>{{ trabajador.cargo }}</dd>
+        <dt><i class="fas fa-star me-1"></i> Especialidad</dt><dd>{{ trabajador.especialidad|default:"—" }}</dd>
+        <dt><i class="fas fa-calendar-alt me-1"></i> Ingreso</dt><dd>{{ trabajador.fecha_ingreso|default:"—" }}</dd>
+        <dt><i class="fas fa-phone-alt me-1"></i> Teléfono</dt><dd>{{ trabajador.telefono|default:"—" }}</dd>
+        <dt><i class="fas fa-envelope me-1"></i> Email</dt><dd>{{ trabajador.email|default:"—" }}</dd>
       </dl>
       {% if trabajador.notas_perfil %}
-      <p style="margin-top:16px;"><strong>Notas:</strong> {{ trabajador.notas_perfil }}</p>
+      <p style="margin-top:16px;"><strong><i class="fas fa-sticky-note me-1"></i> Notas:</strong> {{ trabajador.notas_perfil }}</p>
       {% endif %}
     </div>
 
     <div class="tabla-card" style="padding: 24px;">
-      <h3 style="margin-top:0;">Documentos</h3>
+      <h3 style="margin-top:0;"><i class="fas fa-folder-open me-1"></i> Documentos</h3>
 
       {% if documentos %}
       <ul style="list-style:none; padding:0; margin:0 0 20px;">
         {% for doc in documentos %}
         <li style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #eee;">
           <div>
-            <strong>{{ doc.titulo }}</strong>
+            <strong><i class="fas fa-file-alt me-1"></i> {{ doc.titulo }}</strong>
             <span style="color:#888; font-size:0.85rem;"> — {{ doc.get_tipo_display }} · {{ doc.subido_en|date:"d/m/Y" }}</span>
           </div>
           <div style="display:flex; gap:8px;">
-            <a href="{% url 'trabajadores:ver_documento' doc.id %}" class="btn-accion btn-guardar" target="_blank" rel="noopener">Ver</a>
-            <a href="{% url 'trabajadores:descargar_documento' doc.id %}" class="btn-accion">Descargar</a>
+            <a href="{% url 'trabajadores:ver_documento' doc.id %}" class="btn-accion btn-guardar" target="_blank" rel="noopener"><i class="fas fa-eye me-1"></i> Ver</a>
+            <a href="{% url 'trabajadores:descargar_documento' doc.id %}" class="btn-accion"><i class="fas fa-download me-1"></i> Descargar</a>
           </div>
         </li>
         {% endfor %}
@@ -75,7 +75,7 @@
       <p style="color:#666;">Sin documentos adjuntos.</p>
       {% endif %}
 
-      <h4>Subir documento</h4>
+      <h4><i class="fas fa-cloud-upload-alt me-1"></i> Subir documento</h4>
       <form method="post" enctype="multipart/form-data" style="max-width:480px;">
         {% csrf_token %}
         {% for field in doc_form %}
@@ -85,9 +85,42 @@
           {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
         </div>
         {% endfor %}
-        <button type="submit" class="btn-accion btn-guardar">Subir</button>
+        <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-upload me-1"></i> Subir</button>
       </form>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .tabla-card select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    padding: 8px 36px 8px 12px;
+    border: 1.5px solid #dcedf8;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #333333;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    width: 100%;
+  }
+
+  .tabla-card select:hover {
+    border-color: #b0d0ef;
+  }
+
+  .tabla-card select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+</style>
 {% endblock %}

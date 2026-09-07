@@ -17,5 +17,6 @@ urlpatterns = [
 
     # ─── Gestión de Usuarios ─────────────────────────────────────
     path('usuarios/', views.vista_gestion_usuarios, name='gestion_usuarios'),
+    path('usuarios/nuevo/', views.vista_crear_usuario, name='crear_usuario'),
     path('usuarios/<int:usuario_id>/asignar-rol/', views.vista_asignar_rol, name='asignar_rol'),
 ]

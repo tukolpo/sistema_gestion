@@ -78,3 +78,28 @@ def consultar_disponibilidad(fecha=None):
         )
 
     return resultados
+
+from django.core.exceptions import ValidationError
+from guardias.models import GuardiaTurno
+
+def asignar_turno_funcionario(trabajador_id, fecha, turno):
+    disponibilidades = consultar_disponibilidad(fecha)
+    func_info = next((f for f in disponibilidades if f["id"] == int(trabajador_id)), None)
+    
+    if not func_info or not func_info["disponible"]:
+        motivo = func_info["motivo"] if func_info else "No disponible"
+        raise ValidationError(f"No se puede asignar el turno: el funcionario no está disponible ({motivo}).")
+
+    turno_existente = GuardiaTurno.objects.filter(
+        trabajador_id=trabajador_id,
+        fecha=fecha
+    ).exists()
+
+    if turno_existente:
+        raise ValidationError("El funcionario ya tiene un turno asignado para esta fecha.")
+
+    return GuardiaTurno.objects.create(
+        trabajador_id=trabajador_id,
+        fecha=fecha,
+        turno=turno
+    )

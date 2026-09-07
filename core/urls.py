@@ -12,6 +12,7 @@ urlpatterns = [
     path("", include("usuarios.urls", namespace="usuarios")),
     path("api/guardias/", include("guardias.api_urls")),
     path("guardias/", include("guardias.urls")),
+    path("vacaciones/", include("vacaciones.urls", namespace="vacaciones")),
 
 ]
 

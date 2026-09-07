@@ -6,7 +6,7 @@
 {% block topbar_acciones %}
 <form method="get" action="{% url 'trabajadores_ext:auditoria' %}" style="display:flex; gap:8px; flex-wrap:wrap;">
   <input type="search" name="q" value="{{ busqueda }}" placeholder="Buscar..." class="form-input">
-  <select name="accion" class="form-input" onchange="this.form.submit()">
+  <select name="accion" class="form-input select-rol" onchange="this.form.submit()" aria-label="Filtrar por acción">
     <option value="">Todas las acciones</option>
     {% for val, label in acciones %}
     <option value="{{ val }}" {% if filtro_accion == val %}selected{% endif %}>{{ label }}</option>
@@ -18,11 +18,11 @@
 {% block contenido %}
 <div class="tabla-card" role="region">
   <div class="tabla-header-row" role="row">
-    <span>Fecha</span>
-    <span>Acción</span>
-    <span>Trabajador</span>
-    <span>Usuario</span>
-    <span>Detalle</span>
+    <span><i class="fas fa-calendar-alt me-1"></i> Fecha</span>
+    <span><i class="fas fa-bolt me-1"></i> Acción</span>
+    <span><i class="fas fa-user me-1"></i> Trabajador</span>
+    <span><i class="fas fa-user-shield me-1"></i> Usuario</span>
+    <span><i class="fas fa-info-circle me-1"></i> Detalle</span>
   </div>
   <div class="tabla-body">
     {% for r in registros %}
@@ -38,4 +38,37 @@
     {% endfor %}
   </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  select.select-rol {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding: 8px 32px 8px 12px;
+    border: 1.5px solid #dcedf8;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #333333;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    width: auto;
+  }
+
+  select.select-rol:hover {
+    border-color: #b0d0ef;
+  }
+
+  select.select-rol:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,24 @@
+{% extends "usuarios/base.html" %}
+{% block titulo %}Nuevo Usuario{% endblock %}
+{% block topbar_titulo %}Nuevo Usuario{% endblock %}
+{% block contenido %}
+<div class="tabla-card" style="padding: 28px; max-width: 500px;">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="alerta alerta-error" style="margin-bottom: 16px;">{{ form.non_field_errors }}</div>
+    {% endif %}
+    {% for field in form %}
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    <div style="display:flex; gap:12px;">
+      <button type="submit" class="btn-accion btn-guardar">Crear Usuario</button>
+      <a href="{% url 'usuarios:gestion_usuarios' %}" class="btn-accion" style="background:#ccc; color:#333;">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

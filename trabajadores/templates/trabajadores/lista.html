@@ -7,48 +7,53 @@
 {% block topbar_acciones %}
 <form id="form-filtros-trabajadores" role="search"
   style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-  <select id="filtro-cargo" name="cargo" class="form-input" style="width:auto;"
-    aria-label="Filtrar por cargo">
+  
+  <select id="filtro-cargo" name="cargo" class="form-input select-rol" aria-label="Filtrar por cargo">
     <option value="">Todos los cargos</option>
     {% for c in cargos %}
     <option value="{{ c.id }}">{{ c.nombre }}</option>
     {% endfor %}
   </select>
-  <select id="filtro-departamento" name="departamento" class="form-input" style="width:auto;"
-    aria-label="Filtrar por departamento">
+
+  <select id="filtro-departamento" name="departamento" class="form-input select-rol" aria-label="Filtrar por departamento">
     <option value="">Todos los departamentos</option>
     {% for d in departamentos %}
     <option value="{{ d }}">{{ d }}</option>
     {% endfor %}
   </select>
-  <select id="filtro-estatus" name="estatus" class="form-input" style="width:auto;"
-    aria-label="Filtrar por estatus">
+
+  <select id="filtro-estatus" name="estatus" class="form-input select-rol" aria-label="Filtrar por estatus">
     <option value="">Todos los estatus</option>
     <option value="ACTIVO">Activos</option>
     <option value="INACTIVO">Inactivos</option>
   </select>
-  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:140px;">
+
+  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:140px; display: flex; align-items: center; position: relative; margin-bottom: 0;">
+    <i class="fas fa-calendar-alt" style="position: absolute; left: 12px; color: var(--color-texto-suave, #6c757d); font-size: 0.85rem;" aria-hidden="true"></i>
     <input type="number" id="filtro-antiguedad" name="antiguedad" min="0" step="1"
-      placeholder="Antigüedad (años)" class="form-input" style="width:100%;"
+      placeholder="Antigüedad (años)" class="form-input" style="width:100%; padding-left: 36px;"
       aria-label="Antigüedad mínima en años">
   </label>
+
   <button type="button" id="btn-limpiar-filtros" class="btn-accion"
     style="display:none;" aria-label="Limpiar filtros">
-    Limpiar
+    <i class="fas fa-times me-1"></i> Limpiar
   </button>
 
   <div class="dropdown-exportar" style="position:relative; display:inline-block;">
-    <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false">
-      Exportar ▾
+    <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false" style="padding: 8px 14px;">
+      <i class="fas fa-file-export me-1"></i> Exportar <i class="fas fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
     </button>
     <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:140px; z-index:10;">
-      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">Excel</a>
-      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">CSV</a>
-      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:8px 14px; text-decoration:none; color:#333;">PDF</a>
+      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-excel text-success me-2"></i>Excel</a>
+      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-csv text-info me-2"></i>CSV</a>
+      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF</a>
     </div>
   </div>
 
-  <a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar">+ Nuevo</a>
+  <a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar" style="padding: 8px 14px;">
+    <i class="fas fa-plus me-1"></i> Nuevo
+  </a>
 </form>
 
 <script>
@@ -102,6 +107,35 @@
   #contenedor-tabla-trabajadores .tabla-fila {
     grid-template-columns: 2fr 1.2fr 1.5fr 1.5fr 1fr 1fr 1.8fr;
   }
+
+  select.select-rol {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px;
+    padding: 8px 32px 8px 12px;
+    border: 1.5px solid #dcedf8;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #333333;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    width: auto;
+  }
+
+  select.select-rol:hover {
+    border-color: #b0d0ef;
+  }
+
+  select.select-rol:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
+  }
 </style>
 {% endblock %}
 
@@ -110,22 +144,24 @@
   id="contenedor-tabla-trabajadores">
 
   <div class="tabla-header-row" role="row">
-    <span>Trabajador</span>
-    <span>Cédula</span>
-    <span>Cargo</span>
-    <span>Departamento</span>
-    <span>Antigüedad</span>
-    <span>Estado</span>
-    <span>Acciones</span>
+    <span><i class="fas fa-user me-1"></i> Trabajador</span>
+    <span><i class="fas fa-id-card me-1"></i> Cédula</span>
+    <span><i class="fas fa-briefcase me-1"></i> Cargo</span>
+    <span><i class="fas fa-building me-1"></i> Departamento</span>
+    <span><i class="fas fa-clock me-1"></i> Antigüedad</span>
+    <span><i class="fas fa-toggle-on me-1"></i> Estado</span>
+    <span><i class="fas fa-sliders me-1"></i> Acciones</span>
   </div>
 
   <div class="tabla-body" id="tabla-trabajadores-body" role="rowgroup">
     <div class="tabla-vacia" id="estado-cargando-trabajadores">
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--color-texto-suave); margin-bottom: 10px;" aria-hidden="true"></i>
       <p>Cargando trabajadores...</p>
     </div>
   </div>
 
   <div class="tabla-vacia" id="mensaje-sin-resultados" hidden role="status">
+    <i class="fas fa-users-slash" style="font-size: 2.5rem; color: var(--color-texto-suave); margin-bottom: 10px;" aria-hidden="true"></i>
     <p>No se encontraron resultados</p>
   </div>
 

@@ -7,11 +7,12 @@ NIVEL_ADMINISTRADOR = 100
 NIVEL_SUPERVISOR = 50
 NIVEL_OPERATIVO = 10
 
-# Umbrales usados en vistas
+
 NIVEL_GESTION_USUARIOS = NIVEL_SUPERVISOR
 NIVEL_ASIGNAR_ROLES = NIVEL_ADMINISTRADOR
+NIVEL_DASHBOARD_GENERAL = 40  # Administrador, Gerente de guardias y Supervisor
 
-# Bloqueo por intentos fallidos de login (Tarea 4)
+
 MAX_INTENTOS_LOGIN = 5
 MINUTOS_BLOQUEO_LOGIN = 5
 

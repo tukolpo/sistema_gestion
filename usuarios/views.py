@@ -1,5 +1,4 @@
-# usuarios/views.py
-# Integrante 1: Vistas web (login, panel, gestión de usuarios)
+
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -7,13 +6,17 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.db.models import Count
+from trabajadores.models import Trabajador
+from vacaciones.models import SolicitudVacaciones
 
 from usuarios.constants import (
     NIVEL_ASIGNAR_ROLES,
     NIVEL_GESTION_USUARIOS,
+    NIVEL_DASHBOARD_GENERAL,
 )
 from usuarios.decorators import requiere_jerarquia
-from usuarios.forms import LoginForm
+from usuarios.forms import LoginForm, CrearUsuarioForm
 from usuarios.models import Rol, Usuario
 from usuarios.security import (
     nivel_usuario,
@@ -57,14 +60,30 @@ def vista_logout(request):
 
 @login_required
 def vista_dashboard(request):
-    if request.user.tiene_rango_minimo(NIVEL_GESTION_USUARIOS):
-        return redirect("usuarios:gestion_usuarios")
+    puede_ver_dashboard_general = request.user.tiene_rango_minimo(NIVEL_DASHBOARD_GENERAL)
 
-    return render(
-        request,
-        "usuarios/inicio.html",
-        {"titulo": "Inicio", "seccion_activa": "inicio"},
-    )
+    contexto = {
+        "titulo": "Inicio",
+        "seccion_activa": "inicio",
+        "puede_ver_dashboard_general": puede_ver_dashboard_general,
+    }
+
+    if puede_ver_dashboard_general:
+        total_trabajadores = Trabajador.objects.count()
+        activos = Trabajador.objects.filter(estado=Trabajador.Estado.ACTIVO).count()
+
+        contexto.update({
+            "total_trabajadores": total_trabajadores,
+            "activos": activos,
+            "inactivos": total_trabajadores - activos,
+            "personal_por_cargo": Trabajador.objects.values("cargo__nombre")
+                .annotate(total=Count("id")).order_by("-total"),
+            "vacaciones_pendientes": SolicitudVacaciones.objects.filter(
+                estado=SolicitudVacaciones.Estado.PENDIENTE
+            ).count(),
+        })
+
+    return render(request, "usuarios/inicio.html", contexto)
 
 
 def vista_sin_permisos(request, exception=None):
@@ -110,6 +129,31 @@ def vista_gestion_usuarios(request):
         },
     )
 
+
+@login_required
+@requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)
+def vista_crear_usuario(request):
+    if request.method == "POST":
+        form = CrearUsuarioForm(
+            request.POST,
+            roles_disponibles=roles_asignables(request.user),
+            admin_user=request.user,
+        )
+        if form.is_valid():
+            usuario = form.guardar()
+            messages.success(request, f"Usuario {usuario.email} creado correctamente.")
+            return redirect("usuarios:gestion_usuarios")
+    else:
+        form = CrearUsuarioForm(
+            roles_disponibles=roles_asignables(request.user),
+            admin_user=request.user,
+        )
+
+    return render(request, "usuarios/crear_usuario.html", {
+        "form": form,
+        "titulo": "Nuevo Usuario",
+        "seccion_activa": "gestion_usuarios",
+    })
 
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)

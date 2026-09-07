@@ -1,4 +1,4 @@
-from usuarios.constants import NIVEL_ADMINISTRADOR
+from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
 
 
 def permisos_globales(request):
@@ -7,4 +7,11 @@ def permisos_globales(request):
         request.user.is_authenticated
         and request.user.tiene_rango_minimo(NIVEL_ADMINISTRADOR)
     )
-    return {"es_administrador": es_administrador}
+    puede_gestionar_usuarios = (
+        request.user.is_authenticated
+        and request.user.tiene_rango_minimo(NIVEL_GESTION_USUARIOS)
+    )
+    return {
+        "es_administrador": es_administrador,
+        "puede_gestionar_usuarios": puede_gestionar_usuarios,
+    }

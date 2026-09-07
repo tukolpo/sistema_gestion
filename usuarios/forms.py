@@ -1,5 +1,4 @@
-# usuarios/forms.py
-# Integrante 1: Subtarea 1.2 — Validaciones en el Frontend (formularios Django + JS)
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
@@ -106,3 +105,61 @@ class LoginForm(AuthenticationForm):
                 MENSAJE_CUENTA_BLOQUEADA,
                 code="account_locked",
             )
+
+
+from django.contrib.auth.password_validation import validate_password
+from usuarios.models import Usuario, Rol
+
+
+class CrearUsuarioForm(forms.Form):
+    password_confirmacion_admin = forms.CharField(
+        label="Tu contraseña (para confirmar esta acción)",
+        widget=forms.PasswordInput(attrs={"class": "form-input"}),
+    )
+    email = forms.EmailField(
+        label="Correo Electrónico",
+        widget=forms.EmailInput(attrs={"class": "form-input"}),
+    )
+    password1 = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={"class": "form-input"}),
+    )
+    password2 = forms.CharField(
+        label="Confirmar Contraseña",
+        widget=forms.PasswordInput(attrs={"class": "form-input"}),
+    )
+    rol = forms.ModelChoiceField(
+        label="Rol",
+        queryset=Rol.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+
+    def __init__(self, *args, roles_disponibles=None, admin_user=None, **kwargs):
+        # Capturamos el argumento personalizado antes de llamar a super() para evitar el TypeError
+        self.admin_user = admin_user
+        super().__init__(*args, **kwargs)
+        if roles_disponibles is not None:
+            self.fields["rol"].queryset = roles_disponibles
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if Usuario.objects.filter(email__iexact=email).exists():
+            raise ValidationError("Ya existe un usuario con este correo.")
+        return email
+
+    def clean_password2(self):
+        p1 = self.cleaned_data.get("password1")
+        p2 = self.cleaned_data.get("password2")
+        if p1 and p2 and p1 != p2:
+            raise ValidationError("Las contraseñas no coinciden.")
+        if p2:
+            validate_password(p2)
+        return p2
+
+    def guardar(self):
+        email = self.cleaned_data["email"]
+        usuario = Usuario(username=email, email=email, rol=self.cleaned_data.get("rol"))
+        usuario.set_password(self.cleaned_data["password1"])
+        usuario.save()
+        return usuario

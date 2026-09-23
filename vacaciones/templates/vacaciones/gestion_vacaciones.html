@@ -4,7 +4,24 @@
 {% block topbar_titulo %}Gestión de Vacaciones{% endblock %}
 {% block contenido %}
 
-<h2 style="margin-bottom:12px;"><i class="fas fa-umbrella-beach me-2 text-primary"></i> Días Disponibles por Trabajador</h2>
+{# Si tu base.html ya muestra los messages de Django, borra este bloque para que no salgan repetidos #}
+{% if messages %}
+  {% for message in messages %}
+  <div class="{% if message.tags == 'error' %}alerta alerta-error{% else %}alerta{% endif %}"
+       style="margin-bottom:16px; {% if message.tags != 'error' %}background:#d4edda; color:#155724; padding:10px 14px; border-radius:6px;{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+{% endif %}
+
+{# Solo supervisores y administradores ven la tabla con los días de todos #}
+{% if es_supervisor %}
+<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+  <h2 style="margin:0;"><i class="fas fa-umbrella-beach me-2 text-primary"></i> Días Disponibles por Trabajador</h2>
+  <a href="{% url 'vacaciones:lista_solicitudes' %}" class="btn-accion btn-guardar" style="text-decoration:none; display:inline-block;">
+    <i class="fas fa-list-check me-1"></i> Ver y aprobar solicitudes
+  </a>
+</div>
 
 <div class="tabla-card" role="region" aria-label="Días disponibles por trabajador">
   <div class="tabla-header-row" role="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
@@ -29,20 +46,92 @@
     {% endfor %}
   </div>
 </div>
+{% endif %}
 
-<h2 style="margin:24px 0 12px;"><i class="fas fa-file-signature me-2 text-primary"></i> Nueva Solicitud de Vacaciones</h2>
+<h2 style="margin:{% if es_supervisor %}24px{% else %}0{% endif %} 0 12px;"><i class="fas fa-file-signature me-2 text-primary"></i> Nueva Solicitud de Vacaciones</h2>
 <div class="tabla-card" style="padding:24px; max-width:500px;">
-  <form method="post">
+
+  {% if sin_trabajador %}
+  <div class="alerta alerta-error">
+    Tu cuenta no está vinculada a ningún trabajador, por eso no puedes solicitar vacaciones.
+    Pide a un administrador que registre el correo de tu cuenta ({{ user.email|default:"sin correo" }}) en tu ficha de trabajador.
+  </div>
+
+  {% else %}
+  <form method="post" novalidate>
     {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="alerta alerta-error" style="margin-bottom:16px;">{{ form.non_field_errors }}</div>
+    {% endif %}
     {% for field in form %}
+    {% if field.name == "trabajador" and not es_supervisor %}
+    <div class="form-group" style="margin-bottom: 14px;">
+      <label>Trabajador</label>
+      <p style="margin:6px 0 0; font-weight:bold;">{{ trabajador_propio }}</p>
+    </div>
+    {% else %}
     <div class="form-group" style="margin-bottom: 14px;">
       <label for="{{ field.id_for_label }}">{{ field.label }}</label>
       {{ field }}
       {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
     </div>
+    {% endif %}
     {% endfor %}
+    <p id="dias-disponibles-info" style="font-size:0.85rem; margin-bottom:14px;" aria-live="polite"></p>
     <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-paper-plane me-1"></i> Solicitar</button>
   </form>
+  {% endif %}
 </div>
+
+{% if not sin_trabajador %}
+<script>
+  const diasDisponibles = {{ dias_disponibles_json|safe }};
+  // Si el usuario no es supervisor, el trabajador es fijo (el suyo); si no, viene del desplegable
+  const trabajadorFijoId = {{ trabajador_propio.id|default:"null" }};
+  const selectTrabajador = document.getElementById("id_trabajador");
+  const inputInicio = document.getElementById("id_fecha_inicio");
+  const inputFin = document.getElementById("id_fecha_fin");
+  const infoDias = document.getElementById("dias-disponibles-info");
+
+  function trabajadorActual() {
+    if (trabajadorFijoId !== null) return String(trabajadorFijoId);
+    return selectTrabajador ? selectTrabajador.value : "";
+  }
+
+  function diasSolicitados() {
+    if (!inputInicio.value || !inputFin.value) return null;
+    const ms = new Date(inputFin.value) - new Date(inputInicio.value);
+    const dias = Math.round(ms / 86400000) + 1;
+    return dias > 0 ? dias : null;
+  }
+
+  function actualizarDias() {
+    const id = trabajadorActual();
+    if (!id || diasDisponibles[id] === undefined) {
+      infoDias.textContent = "";
+      return;
+    }
+    const disponibles = diasDisponibles[id];
+    const solicitados = diasSolicitados();
+    let texto = "Días disponibles: " + disponibles + ".";
+    let excede = false;
+
+    if (solicitados !== null) {
+      texto += " Estás solicitando: " + solicitados + ".";
+      if (solicitados > disponibles) {
+        texto += " Excede los días disponibles.";
+        excede = true;
+      }
+    }
+    infoDias.textContent = texto;
+    infoDias.style.color = excede ? "#b00020" : "";
+  }
+
+  [selectTrabajador, inputInicio, inputFin].filter(Boolean).forEach(function (el) {
+    el.addEventListener("change", actualizarDias);
+  });
+  actualizarDias();
+</script>
+{% endif %}
 
 {% endblock %}

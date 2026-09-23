@@ -1,0 +1,68 @@
+{% extends "usuarios/base.html" %}
+{% block titulo %}Solicitudes de Vacaciones{% endblock %}
+{% block topbar_titulo %}Solicitudes de Vacaciones{% endblock %}
+{% block contenido %}
+
+{# Si tu base.html ya muestra los messages de Django, borra este bloque para que no salgan repetidos #}
+{% if messages %}
+  {% for message in messages %}
+  <div class="{% if message.tags == 'error' %}alerta alerta-error{% else %}alerta{% endif %}"
+       style="margin-bottom:16px; {% if message.tags != 'error' %}background:#d4edda; color:#155724; padding:10px 14px; border-radius:6px;{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+{% endif %}
+
+<div style="margin-bottom:16px;">
+  <a href="{% url 'vacaciones:gestion_vacaciones' %}" class="btn-accion btn-guardar" style="text-decoration:none; display:inline-block;">
+    <i class="fas fa-arrow-left me-1"></i> Volver a Vacaciones
+  </a>
+</div>
+
+<div class="tabla-card" role="region" aria-label="Solicitudes de vacaciones">
+  <div class="tabla-header-row" role="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;">
+    <span role="columnheader"><i class="fas fa-user me-1"></i> Trabajador</span>
+    <span role="columnheader"><i class="fas fa-calendar-day me-1"></i> Inicio</span>
+    <span role="columnheader"><i class="fas fa-calendar-day me-1"></i> Fin</span>
+    <span role="columnheader"><i class="fas fa-hourglass-half me-1"></i> Días</span>
+    <span role="columnheader"><i class="fas fa-circle-info me-1"></i> Estado</span>
+    <span role="columnheader"><i class="fas fa-sliders me-1"></i> Acción</span>
+  </div>
+  <div class="tabla-body" role="rowgroup">
+    {% for solicitud in solicitudes %}
+    <div class="tabla-fila" role="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr;">
+      <div role="cell">{{ solicitud.trabajador }}</div>
+      <div role="cell">{{ solicitud.fecha_inicio }}</div>
+      <div role="cell">{{ solicitud.fecha_fin }}</div>
+      <div role="cell">{{ solicitud.dias_calculados }}</div>
+      <div role="cell">
+        <span class="badge-rol {% if solicitud.estado == 'APROBADA' %}badge-disponible{% elif solicitud.estado == 'RECHAZADA' %}badge-sin-rol{% endif %}">
+          {{ solicitud.get_estado_display }}
+        </span>
+      </div>
+      <div role="cell">
+        {% if solicitud.estado == 'PENDIENTE' %}
+        <form method="post" action="{% url 'vacaciones:cambiar_estado_solicitud' solicitud.id %}" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="estado" value="APROBADA">
+          <button type="submit" class="btn-accion btn-guardar" style="padding:4px 10px; font-size:0.8rem;">Aprobar</button>
+        </form>
+        <form method="post" action="{% url 'vacaciones:cambiar_estado_solicitud' solicitud.id %}" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="estado" value="RECHAZADA">
+          <button type="submit" class="btn-accion" style="background:#8b1a2b; color:white; padding:4px 10px; font-size:0.8rem;">Rechazar</button>
+        </form>
+        {% else %}
+        <span class="celda-email">—</span>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="tabla-vacia" role="cell">
+      <p>No hay solicitudes registradas.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     "trabajadores_ext",
     "guardias",
     "vacaciones",
+    "configuracion",
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

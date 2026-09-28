@@ -3,34 +3,153 @@
 {% block titulo %}{{ titulo }}{% endblock %}
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
+{% block extra_css %}
+<style>
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+  }
+  .seccion-form-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .seccion-form-titulo .icono-seccion {
+    width: 34px; height: 34px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    background: #e8f0fe; color: #2E5C8A; font-size: 0.95rem;
+  }
+  .seccion-form-titulo h3 { margin: 0; font-size: 1.05rem; }
+</style>
+{% endblock %}
+
 {% block contenido %}
-<div class="tabla-card" style="padding: 28px; max-width: 600px;">
-  <form method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
 
-    {% if form.non_field_errors %}
-    <div class="alerta alerta-error" style="margin-bottom: 16px;">
-      {{ form.non_field_errors }}
-    </div>
-    {% endif %}
+  {% if form.non_field_errors %}
+  <div class="alerta alerta-error" style="margin-bottom: 16px; max-width: 760px;">
+    {{ form.non_field_errors }}
+  </div>
+  {% endif %}
 
-    {% for field in form %}
-    <div class="form-group" style="margin-bottom: 14px;">
-      <label for="{{ field.id_for_label }}" style="display:block; margin-bottom: 6px; font-size: 0.85rem;">
-        {{ field.label }}{% if field.field.required %} *{% endif %}
-      </label>
-      {{ field }}
-      {% if field.errors %}
-      <p style="color: #b00020; font-size: 0.8rem; margin-top: 4px;">{{ field.errors.0 }}</p>
+  <div style="display:grid; grid-template-columns: 220px 1fr; gap:24px; align-items:start; max-width: 900px;">
+
+    <!-- Foto -->
+    <div class="tabla-card" style="padding:20px; text-align:center;">
+      <div class="seccion-form-titulo" style="justify-content:center; border-bottom:none; margin-bottom:12px;">
+        <div class="icono-seccion"><i class="fas fa-camera"></i></div>
+      </div>
+      <label for="{{ form.foto.id_for_label }}" style="font-size:0.85rem; display:block; margin-bottom:8px;">Foto de perfil</label>
+      {{ form.foto }}
+      {% if form.foto.errors %}
+      <p style="color:#b00020; font-size:0.8rem; margin-top:6px;">{{ form.foto.errors.0 }}</p>
       {% endif %}
     </div>
-    {% endfor %}
 
-    <div style="display:flex; gap:12px; margin-top:16px;">
-      <button type="submit" class="btn-accion btn-guardar">Guardar</button>
-      <a href="{% url 'trabajadores:lista' %}" class="btn-accion"
-        style="background:#ccc; color:#333;">Cancelar</a>
+    <div>
+      <!-- Datos personales -->
+      <div class="tabla-card" style="padding:24px; margin-bottom:20px;">
+        <div class="seccion-form-titulo">
+          <div class="icono-seccion"><i class="fas fa-id-card"></i></div>
+          <h3>Datos Personales</h3>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="{{ form.nombre.id_for_label }}">Nombre *</label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.nombre.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.apellido.id_for_label }}">Apellido *</label>
+            {{ form.apellido }}
+            {% if form.apellido.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.apellido.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.cedula.id_for_label }}">Cédula *</label>
+            {{ form.cedula }}
+            {% if form.cedula.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.cedula.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+            {{ form.fecha_nacimiento }}
+            {% if form.fecha_nacimiento.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.fecha_nacimiento.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos laborales -->
+      <div class="tabla-card" style="padding:24px; margin-bottom:20px;">
+        <div class="seccion-form-titulo">
+          <div class="icono-seccion"><i class="fas fa-briefcase"></i></div>
+          <h3>Datos Laborales</h3>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="{{ form.fecha_ingreso.id_for_label }}">Fecha de ingreso</label>
+            {{ form.fecha_ingreso }}
+            {% if form.fecha_ingreso.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.fecha_ingreso.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.estado.id_for_label }}">Estado *</label>
+            {{ form.estado }}
+            {% if form.estado.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.estado.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.cargo.id_for_label }}">Cargo *</label>
+            {{ form.cargo }}
+            {% if form.cargo.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.cargo.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.especialidad.id_for_label }}">Especialidad</label>
+            {{ form.especialidad }}
+            {% if form.especialidad.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.especialidad.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Contacto -->
+      <div class="tabla-card" style="padding:24px; margin-bottom:20px;">
+        <div class="seccion-form-titulo">
+          <div class="icono-seccion"><i class="fas fa-address-book"></i></div>
+          <h3>Contacto</h3>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="{{ form.telefono.id_for_label }}">Teléfono</label>
+            {{ form.telefono }}
+            {% if form.telefono.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.telefono.errors.0 }}</p>{% endif %}
+          </div>
+          <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.email.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label for="{{ form.notas_perfil.id_for_label }}">Notas del perfil</label>
+          {{ form.notas_perfil }}
+          {% if form.notas_perfil.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ form.notas_perfil.errors.0 }}</p>{% endif %}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-check me-1"></i> Guardar</button>
+        <a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;">Cancelar</a>
+      </div>
     </div>
-  </form>
-</div>
+
+  </div>
+</form>
 {% endblock %}

@@ -2,6 +2,11 @@
 {% load static %}
 {% block titulo %}Vacaciones{% endblock %}
 {% block topbar_titulo %}Gestión de Vacaciones{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vacaciones/css/vacaciones.css' %}?v={% now 'U' %}">
+{% endblock %}
+
 {% block contenido %}
 
 {# Si tu base.html ya muestra los messages de Django, borra este bloque para que no salgan repetidos #}
@@ -49,7 +54,8 @@
 {% endif %}
 
 <h2 style="margin:{% if es_supervisor %}24px{% else %}0{% endif %} 0 12px;"><i class="fas fa-file-signature me-2 text-primary"></i> Nueva Solicitud de Vacaciones</h2>
-<div class="tabla-card" style="padding:24px; max-width:500px;">
+
+<div class="tarjeta-solicitud">
 
   {% if sin_trabajador %}
   <div class="alerta alerta-error">
@@ -63,22 +69,60 @@
     {% if form.non_field_errors %}
     <div class="alerta alerta-error" style="margin-bottom:16px;">{{ form.non_field_errors }}</div>
     {% endif %}
+
     {% for field in form %}
-    {% if field.name == "trabajador" and not es_supervisor %}
-    <div class="form-group" style="margin-bottom: 14px;">
-      <label>Trabajador</label>
-      <p style="margin:6px 0 0; font-weight:bold;">{{ trabajador_propio }}</p>
-    </div>
+    {% if field.name == "trabajador" %}
+      <div class="form-group">
+        <label {% if es_supervisor %}for="{{ field.id_for_label }}"{% endif %}>Trabajador</label>
+        {% if es_supervisor %}
+        <div class="campo-icono">
+          <i class="fas fa-user"></i>
+          {{ field }}
+        </div>
+        {% else %}
+        <div class="trabajador-chip">
+          <i class="fas fa-user"></i> {{ trabajador_propio }}
+        </div>
+        {% endif %}
+        {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+
+    {% elif field.name == "fecha_inicio" %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">Fecha de Inicio</label>
+        <div class="campo-icono">
+          <i class="fas fa-calendar-alt"></i>
+          {{ field }}
+        </div>
+        {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+
+    {% elif field.name == "fecha_fin" %}
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">Fecha de Fin</label>
+        <div class="campo-icono">
+          <i class="fas fa-calendar-alt"></i>
+          {{ field }}
+        </div>
+        {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+      </div>
+
     {% else %}
-    <div class="form-group" style="margin-bottom: 14px;">
-      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-      {{ field }}
-      {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
-    </div>
+      <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}<p style="color:#b00020; font-size:0.8rem;">{{ field.errors.0 }}</p>{% endif %}
+      </div>
     {% endif %}
     {% endfor %}
-    <p id="dias-disponibles-info" style="font-size:0.85rem; margin-bottom:14px;" aria-live="polite"></p>
-    <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-paper-plane me-1"></i> Solicitar</button>
+
+    <p id="dias-disponibles-info" class="dias-info-pill" aria-live="polite"></p>
+
+    <div class="form-acciones">
+      <button type="submit" class="btn-solicitar-moderno">
+        SOLICITAR <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
   </form>
   {% endif %}
 </div>
@@ -109,6 +153,7 @@
     const id = trabajadorActual();
     if (!id || diasDisponibles[id] === undefined) {
       infoDias.textContent = "";
+      infoDias.classList.remove("dias-info-excedido");
       return;
     }
     const disponibles = diasDisponibles[id];
@@ -124,7 +169,7 @@
       }
     }
     infoDias.textContent = texto;
-    infoDias.style.color = excede ? "#b00020" : "";
+    infoDias.classList.toggle("dias-info-excedido", excede);
   }
 
   [selectTrabajador, inputInicio, inputFin].filter(Boolean).forEach(function (el) {

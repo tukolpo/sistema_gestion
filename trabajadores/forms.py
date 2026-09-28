@@ -1,7 +1,12 @@
 from django import forms
 
 from trabajadores.models import DocumentoTrabajador, Trabajador
-from trabajadores.validators import validar_archivo_documento, validar_archivo_foto
+from trabajadores.validators import (
+    normalizar_cedula,
+    validar_archivo_documento,
+    validar_archivo_foto,
+    validar_cedula_venezuela,
+)
 
 
 class TrabajadorForm(forms.ModelForm):
@@ -24,7 +29,13 @@ class TrabajadorForm(forms.ModelForm):
         widgets = {
             "nombre": forms.TextInput(attrs={"class": "form-input"}),
             "apellido": forms.TextInput(attrs={"class": "form-input"}),
-            "cedula": forms.TextInput(attrs={"class": "form-input"}),
+            "cedula": forms.TextInput(
+                attrs={
+                    "class": "form-input",
+                    "placeholder": "V-12345678",
+                    "maxlength": "10",
+                }
+            ),
             "cargo": forms.Select(attrs={"class": "form-input"}),
             "especialidad": forms.Select(attrs={"class": "form-input"}),
             "estado": forms.Select(attrs={"class": "form-input"}),
@@ -39,6 +50,19 @@ class TrabajadorForm(forms.ModelForm):
             ),
             "foto": forms.FileInput(attrs={"class": "form-input"}),
         }
+
+    def clean_cedula(self):
+        valor = normalizar_cedula(self.cleaned_data.get("cedula"))
+        validar_cedula_venezuela(valor)
+
+        # Evita choque con otro trabajador que ya tenga esa cédula normalizada
+        qs = Trabajador.objects.filter(cedula=valor)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Ya existe un trabajador con esta cédula.")
+
+        return valor
 
     def clean_foto(self):
         foto = self.cleaned_data.get("foto")

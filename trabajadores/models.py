@@ -1,6 +1,7 @@
 import uuid
 
 from django.conf import settings
+from django.core.validators import MinLengthValidator
 from django.db import models
 
 from trabajadores.storage import private_storage
@@ -21,7 +22,11 @@ def _ruta_documento(instance, filename):
 
 
 class Cargo(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(
+        max_length=100,
+        unique=True,
+        validators=[MinLengthValidator(2, "El nombre del cargo es demasiado corto.")],
+    )
     descripcion = models.TextField(blank=True)
 
     class Meta:
@@ -34,7 +39,11 @@ class Cargo(models.Model):
 
 
 class Especialidad(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
+    nombre = models.CharField(
+        max_length=100,
+        unique=True,
+        validators=[MinLengthValidator(2, "El nombre de la especialidad es demasiado corto.")],
+    )
     descripcion = models.TextField(blank=True)
 
     class Meta:

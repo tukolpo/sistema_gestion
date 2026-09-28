@@ -1,5 +1,3 @@
-
-
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -9,17 +7,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Count
 from trabajadores.models import Trabajador
 from vacaciones.models import SolicitudVacaciones
+from trabajadores.utils import trabajador_del_usuario
+from vacaciones.services import calcular_dias_disponibles
+from guardias.models import GuardiaTurno
+from datetime import date
 
 from usuarios.constants import (
     NIVEL_ASIGNAR_ROLES,
     NIVEL_GESTION_USUARIOS,
     NIVEL_DASHBOARD_GENERAL,
+    NIVEL_ADMINISTRADOR,
 )
 from usuarios.decorators import requiere_jerarquia
 from usuarios.forms import LoginForm, CrearUsuarioForm
-from usuarios.models import Rol, Usuario
+from usuarios.models import Rol, SecurityLog, Usuario
 from usuarios.security import (
     nivel_usuario,
+    registrar_evento,
     registrar_login_exitoso,
     roles_asignables,
 )
@@ -82,6 +86,16 @@ def vista_dashboard(request):
                 estado=SolicitudVacaciones.Estado.PENDIENTE
             ).count(),
         })
+    else:
+        trabajador_propio = trabajador_del_usuario(request.user)
+        contexto["trabajador_propio"] = trabajador_propio
+
+        if trabajador_propio:
+            contexto["dias_vacaciones"] = calcular_dias_disponibles(trabajador_propio)
+            contexto["proximos_turnos"] = GuardiaTurno.objects.filter(
+                trabajador=trabajador_propio,
+                fecha__gte=date.today(),
+            ).order_by("fecha")[:5]
 
     return render(request, "usuarios/inicio.html", contexto)
 
@@ -124,8 +138,9 @@ def vista_gestion_usuarios(request):
             "titulo": "Gestión de Usuarios",
             "seccion_activa": "gestion_usuarios",
             "puede_asignar_roles": request.user.tiene_rango_minimo(
-                NIVEL_ASIGNAR_ROLES
-            ),
+            NIVEL_ASIGNAR_ROLES
+                ),
+                "nivel_admin": NIVEL_ADMINISTRADOR,
         },
     )
 
@@ -155,6 +170,7 @@ def vista_crear_usuario(request):
         "seccion_activa": "gestion_usuarios",
     })
 
+
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)
 def vista_asignar_rol(request, usuario_id):
@@ -162,10 +178,27 @@ def vista_asignar_rol(request, usuario_id):
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
     usuario_obj = get_object_or_404(Usuario, pk=usuario_id)
+
+    # No permitir que nadie —ni siquiera un superusuario o el administrador—
+    # se cambie el rol a sí mismo. Evita bloqueos accidentales y auto-escaladas
+    # de privilegios. Mismo criterio que el bloqueo de auto-eliminación de abajo.
+    if usuario_obj.pk == request.user.pk:
+        return JsonResponse(
+            {"error": "No puedes cambiar tu propio rol."},
+            status=403,
+        )
+
     rol_id = request.POST.get("rol_id")
 
     if rol_id:
         rol = get_object_or_404(Rol, pk=rol_id)
+
+        if rol.nivel_jerarquia >= NIVEL_ADMINISTRADOR:
+            return JsonResponse(
+                {"error": "El rol de Administrador no puede asignarse desde el sistema."},
+                status=403,
+            )
+
         if not request.user.is_superuser and rol.nivel_jerarquia > nivel_usuario(
             request.user
         ):
@@ -193,5 +226,67 @@ def vista_asignar_rol(request, usuario_id):
             "success": True,
             "mensaje": f"Rol removido del usuario {usuario_obj.username}.",
             "rol_nombre": "Sin Rol",
+        }
+    )
+
+
+@login_required
+@requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)
+def vista_eliminar_usuario(request, usuario_id):
+    """
+    Elimina un usuario. Requiere que el admin logueado reingrese
+    su PROPIA contraseña como confirmación (no la del usuario a eliminar).
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    password = request.POST.get("password", "")
+
+    if not password:
+        return JsonResponse(
+            {"success": False, "error": "Debes ingresar tu contraseña."},
+            status=400,
+        )
+
+    # 1. Verifica la contraseña del usuario que está logueado AHORA (request.user)
+    if not request.user.check_password(password):
+        registrar_evento(request, SecurityLog.Accion.ACCESS_DENIED, user=request.user)
+        return JsonResponse(
+            {"success": False, "error": "Contraseña incorrecta."},
+            status=401,
+        )
+
+    usuario_obj = get_object_or_404(Usuario, pk=usuario_id)
+
+    # 2. No permitir que el admin se elimine a sí mismo
+    if usuario_obj.pk == request.user.pk:
+        return JsonResponse(
+            {"success": False, "error": "No puedes eliminar tu propio usuario."},
+            status=400,
+        )
+
+    # 3. Un no-superusuario no puede eliminar a un superusuario
+    if usuario_obj.is_superuser and not request.user.is_superuser:
+        return JsonResponse(
+            {"success": False, "error": "No tienes permisos para eliminar a un superusuario."},
+            status=403,
+        )
+
+    # 4. Un admin no puede eliminar a alguien de su mismo nivel jerárquico o superior
+    if not request.user.is_superuser and nivel_usuario(usuario_obj) >= nivel_usuario(request.user):
+        return JsonResponse(
+            {"success": False, "error": "No puedes eliminar a un usuario de tu mismo nivel o superior."},
+            status=403,
+        )
+
+    username_eliminado = usuario_obj.username
+    usuario_obj.delete()
+
+    registrar_evento(request, SecurityLog.Accion.USER_DELETED, user=request.user)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "mensaje": f"Usuario {username_eliminado} eliminado correctamente.",
         }
     )

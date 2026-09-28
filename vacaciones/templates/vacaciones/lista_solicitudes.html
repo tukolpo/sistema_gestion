@@ -1,6 +1,12 @@
 {% extends "usuarios/base.html" %}
+{% load static %}
 {% block titulo %}Solicitudes de Vacaciones{% endblock %}
 {% block topbar_titulo %}Solicitudes de Vacaciones{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'vacaciones/css/vacaciones.css' %}?v={% now 'U' %}">
+{% endblock %}
+
 {% block contenido %}
 
 {# Si tu base.html ya muestra los messages de Django, borra este bloque para que no salgan repetidos #}
@@ -13,10 +19,32 @@
   {% endfor %}
 {% endif %}
 
-<div style="margin-bottom:16px;">
-  <a href="{% url 'vacaciones:gestion_vacaciones' %}" class="btn-accion btn-guardar" style="text-decoration:none; display:inline-block;">
-    <i class="fas fa-arrow-left me-1"></i> Volver a Vacaciones
-  </a>
+<a href="{% url 'vacaciones:gestion_vacaciones' %}" class="btn-volver-pill">
+  <i class="fas fa-arrow-left"></i> Volver a Vacaciones
+</a>
+
+<div class="stats-solicitudes">
+  <div class="stat-solicitud stat-pendiente">
+    <i class="fas fa-hourglass-half"></i>
+    <div>
+      <span class="stat-solicitud-numero">{{ total_pendientes }}</span>
+      <span class="stat-solicitud-etiqueta">Pendientes</span>
+    </div>
+  </div>
+  <div class="stat-solicitud stat-aprobada">
+    <i class="fas fa-circle-check"></i>
+    <div>
+      <span class="stat-solicitud-numero">{{ total_aprobadas }}</span>
+      <span class="stat-solicitud-etiqueta">Aprobadas</span>
+    </div>
+  </div>
+  <div class="stat-solicitud stat-rechazada">
+    <i class="fas fa-circle-xmark"></i>
+    <div>
+      <span class="stat-solicitud-numero">{{ total_rechazadas }}</span>
+      <span class="stat-solicitud-etiqueta">Rechazadas</span>
+    </div>
+  </div>
 </div>
 
 <div class="tabla-card" role="region" aria-label="Solicitudes de vacaciones">
@@ -45,12 +73,12 @@
         <form method="post" action="{% url 'vacaciones:cambiar_estado_solicitud' solicitud.id %}" style="display:inline;">
           {% csrf_token %}
           <input type="hidden" name="estado" value="APROBADA">
-          <button type="submit" class="btn-accion btn-guardar" style="padding:4px 10px; font-size:0.8rem;">Aprobar</button>
+          <button type="submit" class="btn-aprobar-pill"><i class="fas fa-check"></i> Aprobar</button>
         </form>
         <form method="post" action="{% url 'vacaciones:cambiar_estado_solicitud' solicitud.id %}" style="display:inline;">
           {% csrf_token %}
           <input type="hidden" name="estado" value="RECHAZADA">
-          <button type="submit" class="btn-accion" style="background:#8b1a2b; color:white; padding:4px 10px; font-size:0.8rem;">Rechazar</button>
+          <button type="submit" class="btn-rechazar-pill"><i class="fas fa-xmark"></i> Rechazar</button>
         </form>
         {% else %}
         <span class="celda-email">—</span>

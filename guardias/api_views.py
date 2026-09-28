@@ -139,3 +139,68 @@ class ExportarReporteGuardiasView(APIView):
         response['Content-Disposition'] = f'attachment; filename="reporte_guardias_{inicio_semana}_al_{fin_semana}.xlsx"'
         wb.save(response)
         return response
+
+
+import calendar
+from guardias.services import trabajador_del_usuario
+
+
+class MisGuardiasAPIView(APIView):
+    """
+    Guardias del propio trabajador logueado, para un mes dado.
+    A propósito NO usa PermisoGestionGuardias: cualquier usuario autenticado
+    puede consultarla, pero SOLO ve las suyas — el trabajador se calcula
+    siempre a partir de request.user, nunca se recibe un id por parámetro.
+    """
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SessionAuthentication, JWTAuthentication]
+
+    def get(self, request):
+        trabajador = trabajador_del_usuario(request.user)
+        if trabajador is None:
+            return Response(
+                {"detail": "Tu cuenta no está vinculada a ningún trabajador."},
+                status=404,
+            )
+
+        hoy = date.today()
+        mes_str = request.query_params.get("mes")  # formato "YYYY-MM"
+        if mes_str:
+            try:
+                anio_str, mes_num_str = mes_str.split("-")
+                anio, mes = int(anio_str), int(mes_num_str)
+                if not (1 <= mes <= 12):
+                    raise ValueError
+            except (ValueError, TypeError):
+                return Response(
+                    {"detail": "Formato de mes inválido. Use YYYY-MM."}, status=400
+                )
+        else:
+            anio, mes = hoy.year, hoy.month
+
+        primer_dia = date(anio, mes, 1)
+        ultimo_dia_num = calendar.monthrange(anio, mes)[1]
+        ultimo_dia = date(anio, mes, ultimo_dia_num)
+
+        turnos = GuardiaTurno.objects.filter(
+            trabajador=trabajador,
+            fecha__gte=primer_dia,
+            fecha__lte=ultimo_dia,
+        ).order_by("fecha", "turno")
+
+        data = [
+            {
+                "fecha": str(t.fecha),
+                "turno": t.turno,
+                "turno_display": t.get_turno_display(),
+                "aprobado": t.aprobado,
+            }
+            for t in turnos
+        ]
+
+        return Response({
+            "trabajador": str(trabajador),
+            "anio": anio,
+            "mes": mes,
+            "guardias": data,
+        })

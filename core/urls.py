@@ -13,8 +13,11 @@ urlpatterns = [
     path("api/guardias/", include("guardias.api_urls")),
     path("guardias/", include("guardias.urls")),
     path("vacaciones/", include("vacaciones.urls", namespace="vacaciones")),
+    
 
 ]
+handler403 = "usuarios.views.vista_sin_permisos"
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

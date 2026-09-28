@@ -27,8 +27,6 @@ def _trabajador_del_usuario(usuario):
 def crear_solicitud(request):
     es_supervisor = request.user.tiene_rango_minimo(NIVEL_SUPERVISOR)
 
-    # Supervisores y administradores eligen a cualquier trabajador.
-    # Los demás usuarios solo pueden pedir vacaciones para sí mismos.
     trabajador_propio = None if es_supervisor else _trabajador_del_usuario(request.user)
     sin_trabajador = (not es_supervisor) and trabajador_propio is None
 
@@ -42,7 +40,6 @@ def crear_solicitud(request):
             return redirect("vacaciones:gestion_vacaciones")
         datos = request.POST.copy()
         if trabajador_propio:
-            # Se ignora lo que envíe el navegador: siempre es el trabajador de la cuenta
             datos["trabajador"] = trabajador_propio.pk
 
     form = SolicitudVacacionesForm(datos)
@@ -64,7 +61,6 @@ def crear_solicitud(request):
             for item in trabajadores_con_dias
         }
     else:
-        # El funcionario solo recibe los días de su propio trabajador
         trabajadores_con_dias = []
         dias_por_trabajador = {}
         if trabajador_propio:
@@ -93,8 +89,17 @@ def gestion_vacaciones(request):
 def lista_solicitudes(request):
     solicitudes = SolicitudVacaciones.objects.select_related("trabajador").order_by("-fecha_creacion")
 
+    Estado = SolicitudVacaciones.Estado
+    # Conteos para el resumen de la parte de arriba de la pantalla
+    total_pendientes = solicitudes.filter(estado=Estado.PENDIENTE).count()
+    total_aprobadas = solicitudes.filter(estado=Estado.APROBADA).count()
+    total_rechazadas = solicitudes.filter(estado=Estado.RECHAZADA).count()
+
     return render(request, "vacaciones/lista_solicitudes.html", {
         "solicitudes": solicitudes,
+        "total_pendientes": total_pendientes,
+        "total_aprobadas": total_aprobadas,
+        "total_rechazadas": total_rechazadas,
     })
 
 

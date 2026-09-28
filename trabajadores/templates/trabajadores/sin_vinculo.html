@@ -1,0 +1,12 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block topbar_titulo %}{{ titulo }}{% endblock %}
+
+{% block contenido %}
+<div class="alerta alerta-error" style="max-width:600px;">
+  Tu cuenta no está vinculada a ningún trabajador, por eso no podemos mostrarte un perfil.
+  Pide a un administrador que registre el correo de tu cuenta
+  ({{ user.email|default:"sin correo" }}) en tu ficha de trabajador.
+</div>
+{% endblock %}

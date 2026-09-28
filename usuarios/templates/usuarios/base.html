@@ -35,16 +35,21 @@
        id="nav-inicio">
         <i class="fas fa-house me-2" style="width: 20px; text-align: center;"></i> Inicio
       </a>
+    
       <a href="{% url 'guardias:gestion_guardias' %}"
-        class="nav-item {% if seccion_activa == 'guardias' %}activo{% endif %}"
-        id="nav-guardias">
-         <i class="fas fa-user-shield me-2" style="width: 20px; text-align: center;"></i> Guardias
+      class="nav-item {% if seccion_activa == 'guardias' %}activo{% endif %}"
+      id="nav-guardias">
+      <i class="fas fa-user-shield me-2" style="width: 20px; text-align: center;"></i>
+      {% if puede_gestionar_usuarios %}Guardias{% else %}Mis Guardias{% endif %}
+    </a>
+      
+    <a href="{% url 'trabajadores:lista' %}"
+      class="nav-item {% if seccion_activa == 'trabajadores' %}activo{% endif %}"
+       id="nav-trabajadores">
+      <i class="fas fa-users me-2" style="width: 20px; text-align: center;"></i>
+      {% if puede_gestionar_usuarios %}Trabajadores{% else %}Mi Perfil{% endif %}
       </a>
-      <a href="{% url 'trabajadores:lista' %}"
-         class="nav-item {% if seccion_activa == 'trabajadores' %}activo{% endif %}"
-         id="nav-trabajadores">
-        <i class="fas fa-users me-2" style="width: 20px; text-align: center;"></i> Trabajadores
-      </a>
+      
       <a href="#"
          class="nav-item {% if seccion_activa == 'configuracion' %}activo{% endif %}"
          id="nav-config">

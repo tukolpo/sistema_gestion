@@ -1,8 +1,23 @@
 from datetime import date
 
+from django.core.exceptions import ValidationError
+
 from trabajadores.models import Trabajador
 
-from guardias.models import PermisoLaboral, VacacionSolicitud
+# Fuente única de verdad para vacaciones: el modelo real de la app "vacaciones",
+# donde se solicitan y aprueban. guardias.VacacionSolicitud queda sin usar.
+from vacaciones.models import SolicitudVacaciones
+
+from guardias.models import GuardiaTurno, PermisoLaboral
+
+
+def trabajador_del_usuario(usuario):
+    """Trabajador cuyo correo coincide con el de la cuenta (sin distinguir mayúsculas).
+    Mismo criterio que usa la app de vacaciones para vincular cuenta ↔ trabajador."""
+    correo = (usuario.email or "").strip()
+    if not correo:
+        return None
+    return Trabajador.objects.filter(email__iexact=correo).first()
 
 
 class EstadoDisponibilidad:
@@ -28,8 +43,8 @@ def consultar_disponibilidad(fecha=None):
     )
 
     en_vacaciones = set(
-        VacacionSolicitud.objects.filter(
-            estado=VacacionSolicitud.Estado.APROBADA,
+        SolicitudVacaciones.objects.filter(
+            estado=SolicitudVacaciones.Estado.APROBADA,
             fecha_inicio__lte=fecha,
             fecha_fin__gte=fecha,
         ).values_list("trabajador_id", flat=True)
@@ -79,13 +94,14 @@ def consultar_disponibilidad(fecha=None):
 
     return resultados
 
-from django.core.exceptions import ValidationError
-from guardias.models import GuardiaTurno
 
 def asignar_turno_funcionario(trabajador_id, fecha, turno):
+    if fecha < date.today():
+        raise ValidationError("No se puede asignar un turno en una fecha pasada.")
+
     disponibilidades = consultar_disponibilidad(fecha)
     func_info = next((f for f in disponibilidades if f["id"] == int(trabajador_id)), None)
-    
+
     if not func_info or not func_info["disponible"]:
         motivo = func_info["motivo"] if func_info else "No disponible"
         raise ValidationError(f"No se puede asignar el turno: el funcionario no está disponible ({motivo}).")
@@ -98,8 +114,11 @@ def asignar_turno_funcionario(trabajador_id, fecha, turno):
     if turno_existente:
         raise ValidationError("El funcionario ya tiene un turno asignado para esta fecha.")
 
-    return GuardiaTurno.objects.create(
+    guardia = GuardiaTurno(
         trabajador_id=trabajador_id,
         fecha=fecha,
-        turno=turno
+        turno=turno,
     )
+    guardia.full_clean()  # valida turno (choices) y la restricción trabajador+fecha+turno
+    guardia.save()
+    return guardia

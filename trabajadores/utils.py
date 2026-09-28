@@ -1,5 +1,4 @@
-# trabajadores/utils.py
-# Lógica de estados activo/inactivo (1.3)
+
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from trabajadores.models import Trabajador
@@ -26,3 +25,13 @@ def obtener_umbrales_antiguedad():
         'hace_5_anos': hoy - relativedelta(years=5),
         'hace_10_anos': hoy - relativedelta(years=10),
     }
+
+
+def trabajador_del_usuario(usuario):
+    """Trabajador cuyo correo coincide con el de la cuenta (sin distinguir mayúsculas).
+    Mismo criterio que usan las apps de vacaciones y guardias para vincular
+    una cuenta de usuario con su ficha de trabajador."""
+    correo = (usuario.email or "").strip()
+    if not correo:
+        return None
+    return Trabajador.objects.filter(email__iexact=correo).first()

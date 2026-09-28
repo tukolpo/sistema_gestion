@@ -5,6 +5,7 @@ from guardias.api_views import (
     AsignarTurnoAPIView,
     CronogramaSemanalAPIView,
     ExportarReporteGuardiasView,
+    MisGuardiasAPIView,
 )
 
 urlpatterns = [
@@ -12,4 +13,5 @@ urlpatterns = [
     path("asignar/", AsignarTurnoAPIView.as_view(), name="asignar_turno"),
     path("cronograma/", CronogramaSemanalAPIView.as_view(), name="cronograma_semanal"),
     path("reporte/", ExportarReporteGuardiasView.as_view(), name="reporte_guardias"),
+    path("mis-guardias/", MisGuardiasAPIView.as_view(), name="mis_guardias"),
 ]

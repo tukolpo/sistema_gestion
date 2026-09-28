@@ -4,6 +4,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 import re
 
+from django.contrib.auth.forms import PasswordResetForm
+from usuarios.constants import NIVEL_ADMINISTRADOR
+
 from usuarios.constants import (
     MENSAJE_CREDENCIALES_INCORRECTAS,
     MENSAJE_CUENTA_BLOQUEADA,
@@ -163,3 +166,19 @@ class CrearUsuarioForm(forms.Form):
         usuario.set_password(self.cleaned_data["password1"])
         usuario.save()
         return usuario
+
+    
+
+
+class RestringidoPasswordResetForm(PasswordResetForm):
+    """Igual al formulario estándar de Django, pero nunca envía el correo
+    de recuperación a cuentas de Administrador (por seguridad, esa cuenta
+    solo se recupera manualmente)."""
+
+    def get_users(self, email):
+        users = super().get_users(email)
+        return (
+            u for u in users
+            if not u.is_superuser
+            and not (u.rol and u.rol.nivel_jerarquia >= NIVEL_ADMINISTRADOR)
+        )

@@ -5,7 +5,12 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
-from trabajadores.validators import validar_archivo_documento, validar_archivo_foto
+from trabajadores.validators import (
+    normalizar_cedula,
+    validar_archivo_documento,
+    validar_archivo_foto,
+    validar_cedula_venezuela,
+)
 
 
 class CargoSerializer(serializers.ModelSerializer):
@@ -100,6 +105,18 @@ class TrabajadorSerializer(serializers.ModelSerializer):
 
     def get_antiguedad(self, obj):
         return calcular_antiguedad(obj.fecha_ingreso)
+
+    def validate_cedula(self, valor):
+        valor = normalizar_cedula(valor)
+        validar_cedula_venezuela(valor)
+
+        qs = Trabajador.objects.filter(cedula=valor)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError("Ya existe un trabajador con esta cédula.")
+
+        return valor
 
     def validate_foto(self, foto):
         validar_archivo_foto(foto)

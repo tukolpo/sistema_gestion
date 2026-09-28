@@ -94,9 +94,16 @@ def nivel_usuario(user):
 
 
 def roles_asignables(user):
+    """Roles que se pueden asignar desde la interfaz.
+
+    El rol de Administrador nunca aparece aquí para nadie, ni siquiera
+    para un superusuario de Django: ese cambio solo puede hacerse
+    directamente en la base de datos o el admin de Django.
+    """
+    base = Rol.objects.exclude(nivel_jerarquia__gte=NIVEL_ADMINISTRADOR)
+
     if user.is_superuser:
-        return Rol.objects.all().order_by("-nivel_jerarquia")
+        return base.order_by("-nivel_jerarquia")
+
     max_nivel = nivel_usuario(user)
-    return Rol.objects.filter(nivel_jerarquia__lte=max_nivel).order_by(
-        "-nivel_jerarquia"
-    )
+    return base.filter(nivel_jerarquia__lte=max_nivel).order_by("-nivel_jerarquia")

@@ -1,16 +1,66 @@
+/* Contenedor general: espacios más cerrados entre secciones */
+.guardias-compacto .titulo-seccion {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+}
+.guardias-compacto .titulo-seccion:first-child {
+  margin-top: 0;
+}
+
+/* Pestañas */
+.tabs-guardias {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid #b7d4ee;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.88rem;
+  color: var(--color-texto-suave, #6c757d);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tab-btn:hover {
+  color: #2E5C8A;
+}
+
+.tab-btn-activo {
+  color: #2E5C8A;
+  font-weight: 600;
+  border-bottom-color: #2E5C8A;
+  border-bottom-width: 3px;
+}
+
+.tab-panel {
+  animation: fade-in 0.12s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .disponibilidad-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .disponibilidad-fecha-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 6px;
+  font-size: 0.85rem;
   color: var(--color-texto);
 }
 
@@ -24,9 +74,10 @@
 
 .disponibilidad-vacio,
 .disponibilidad-error {
-  padding: 16px;
+  padding: 10px;
   text-align: center;
   color: var(--color-texto-suave);
+  font-size: 0.85rem;
 }
 
 .badge-disponible {
@@ -51,7 +102,614 @@
 
 .disponibilidad-motivo {
   display: block;
-  margin-top: 2px;
-  font-size: 0.72rem;
+  margin-top: 1px;
+  font-size: 0.68rem;
   color: var(--color-texto-suave);
+}
+
+/* Mensajes de asignación y aprobación */
+.alerta {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.alerta-exito {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+/* Tarjeta "Asignar Turno": campos en fila en vez de apilados */
+/* Tarjeta "Asignar Turno": centrada, redondeada, sombra sutil, borde azulado */
+.tarjeta-asignar {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 28px 26px;
+  background: #fff;
+  border: 1.5px solid #b7d4ee;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(15, 42, 74, 0.12);
+}
+
+.tarjeta-asignar .form-group {
+  margin-bottom: 18px;
+}
+
+.tarjeta-asignar label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #445468;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Campo con icono dentro del recuadro */
+.campo-icono {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.campo-icono > i {
+  position: absolute;
+  left: 14px;
+  color: #7c93ad;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.input-icono {
+  width: 100%;
+  padding: 11px 14px 11px 38px;
+  border: 1.5px solid #8fb8dd;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #333;
+  background-color: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+select.input-icono {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  padding-right: 32px;
+}
+
+.input-icono:focus {
+  outline: none;
+  border-color: #2E5C8A;
+  box-shadow: 0 0 0 3px rgba(46, 92, 138, 0.14);
+}
+
+.input-icono:disabled {
+  background-color: #f4f6f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Menú desplegable propio (reemplaza al <select> nativo de Funcionario) */
+.dropdown-personalizado {
+  position: relative;
+}
+
+.dropdown-select-oculto {
+  display: none;
+}
+
+.dropdown-boton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid #8fb8dd;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dropdown-boton i.fa-user {
+  color: #7c93ad;
+  font-size: 0.85rem;
+}
+
+.dropdown-boton span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-flecha {
+  font-size: 0.72rem;
+  color: #7c93ad;
+  transition: transform 0.15s ease;
+}
+
+.dropdown-boton[aria-expanded="true"] .dropdown-flecha {
+  transform: rotate(180deg);
+}
+
+.dropdown-boton:focus,
+.dropdown-boton[aria-expanded="true"] {
+  outline: none;
+  border-color: #2E5C8A;
+  box-shadow: 0 0 0 3px rgba(46, 92, 138, 0.14);
+}
+
+.dropdown-boton:disabled {
+  background-color: #f4f6f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.dropdown-lista {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fff;
+  border: 1px solid #dcedf8;
+  border-radius: 10px;
+  box-shadow: 0 14px 30px rgba(15, 42, 74, 0.16);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.dropdown-opcion {
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.dropdown-opcion:hover {
+  background-color: #eaf3fc;
+}
+
+.dropdown-opcion-activa {
+  background-color: rgba(43, 107, 58, 0.1);
+  color: #2b6b3a;
+  font-weight: 600;
+}
+
+/* Botón principal: alineado a la derecha, mayúsculas, moderno */
+.form-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btn-asignar-moderno {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #2E5C8A, #3d78b0);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(46, 92, 138, 0.25);
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-asignar-moderno:hover {
+  background: linear-gradient(135deg, #274d76, #326495);
+}
+
+.btn-asignar-moderno:active {
+  transform: translateY(1px);
+}
+
+/* Cronograma: filas más bajas y compactas */
+.cronograma-card {
+  padding: 6px 14px;
+}
+
+.cronograma-fila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  transition: background-color 0.12s ease;
+}
+
+.cronograma-fila:hover {
+  background-color: #f6faff;
+}
+
+.cronograma-fila-borde {
+  border-bottom: 1px solid #eef2f7;
+}
+
+.btn-dia-cronograma {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2E5C8A, #3d78b0);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.62rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  box-shadow: 0 3px 8px rgba(46, 92, 138, 0.28);
+  transition: transform 0.1s ease;
+}
+
+.btn-dia-cronograma:hover {
+  transform: translateY(-1px);
+}
+
+.cronograma-turnos {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.cronograma-turno-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid #dcedf8;
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: #f8fafc;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.cronograma-turno-pill-asignado {
+  background: rgba(43, 107, 58, 0.08);
+  border-color: rgba(43, 107, 58, 0.35);
+}
+
+.cronograma-turno-nombre {
+  font-size: 0.65rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.cronograma-turno-valor {
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: #1e293b;
+  text-align: right;
+}
+
+.cronograma-turno-valor-asignado {
+  color: #2b6b3a;
+}
+
+.acciones-finales {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Navegación de semanas del cronograma */
+.cronograma-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cronograma-nav-centro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cronograma-rango {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1e293b;
+  text-transform: capitalize;
+}
+
+.btn-nav-semana {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #b7d4ee;
+  background: #fff;
+  color: #2E5C8A;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: background-color 0.12s ease;
+}
+
+.btn-nav-semana:hover {
+  background-color: #eaf3fc;
+}
+
+.btn-nav-hoy {
+  border: 1.5px solid #b7d4ee;
+  background: #fff;
+  color: #2E5C8A;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-nav-hoy:hover {
+  background-color: #eaf3fc;
+}
+
+.cronograma-cargando {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-texto-suave, #6c757d);
+  font-size: 0.85rem;
+}
+
+/* ===== Mis Guardias (vista de solo lectura para el rol funcionario) ===== */
+
+.proxima-guardia {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 720px;
+  margin: 0 auto 18px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #eaf3fc, #f4f9ff);
+  border: 1.5px solid #b7d4ee;
+  border-radius: 14px;
+}
+
+.proxima-guardia-icono {
+  font-size: 1.3rem;
+  color: #2E5C8A;
+  flex-shrink: 0;
+}
+
+.proxima-guardia-etiqueta {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #5b7fa6;
+  margin-bottom: 2px;
+}
+
+.proxima-guardia-texto {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.mis-guardias-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  max-width: 720px;
+  margin: 0 auto 14px;
+}
+
+.mis-guardias-nav-centro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mis-guardias-mes {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #1e293b;
+  text-transform: capitalize;
+  min-width: 170px;
+  text-align: center;
+}
+
+.mini-calendario {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1.5px solid #b7d4ee;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(15, 42, 74, 0.1);
+  padding: 22px;
+}
+
+.mini-calendario-encabezado {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.mini-calendario-encabezado span {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #7c93ad;
+  text-transform: uppercase;
+}
+
+.mini-calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.mini-calendario-dia {
+  min-height: 92px;
+  border-radius: 12px;
+  padding: 8px 8px;
+  background: #f8fafc;
+  border: 1.5px solid transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.mini-calendario-dia-otro-mes {
+  background: transparent;
+  opacity: 0.3;
+}
+
+.mini-calendario-dia-hoy {
+  border-color: #2E5C8A;
+  background: #eaf3fc;
+}
+
+.mini-calendario-dia-con-guardia {
+  cursor: pointer;
+}
+
+.mini-calendario-dia-con-guardia:hover {
+  border-color: #8fb8dd;
+  background: #f0f7ff;
+}
+
+.mini-calendario-dia-seleccionado {
+  border-color: #2E5C8A;
+  box-shadow: 0 0 0 2px rgba(46, 92, 138, 0.18);
+}
+
+.mini-calendario-numero {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.mini-calendario-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 8px;
+  line-height: 1.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.mini-calendario-badge i {
+  font-size: 0.65rem;
+}
+
+.mini-calendario-badge-aprobado {
+  background: rgba(43, 107, 58, 0.15);
+  color: #2b6b3a;
+}
+
+.mini-calendario-badge-pendiente {
+  background: rgba(180, 120, 20, 0.15);
+  color: #8a5a00;
+}
+
+/* Panel de detalle del día seleccionado */
+.detalle-dia {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 720px;
+  margin: 14px auto 0;
+  padding: 14px 18px;
+  background: #fff;
+  border: 1.5px solid #dcedf8;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15, 42, 74, 0.08);
+}
+
+.detalle-dia-icono {
+  font-size: 1.1rem;
+  color: #2E5C8A;
+  flex-shrink: 0;
+}
+
+.detalle-dia-fecha {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #7c93ad;
+  margin-bottom: 2px;
+}
+
+.detalle-dia-info {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.detalle-dia-cerrar {
+  margin-left: auto;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 6px;
+}
+
+.detalle-dia-cerrar:hover {
+  color: #334155;
+}
+
+.mis-guardias-leyenda {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: #475569;
+  flex-wrap: wrap;
+}
+
+.mis-guardias-leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mis-guardias-leyenda i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
 }

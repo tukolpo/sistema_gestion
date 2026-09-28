@@ -5,6 +5,7 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import (
     FileResponse,
@@ -36,7 +37,7 @@ from usuarios.decorators import requiere_jerarquia
 
 from .forms import DocumentoTrabajadorForm, TrabajadorForm
 from .models import Cargo, DocumentoTrabajador, Trabajador
-from .utils import cambiar_estado_trabajador
+from .utils import cambiar_estado_trabajador, trabajador_del_usuario
 
 
 def _contexto_base(extra=None):
@@ -51,8 +52,20 @@ def _puede_gestionar(user):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
 def lista_trabajadores(request):
+    if not _puede_gestionar(request.user):
+        # No es supervisor/admin: no ve el listado completo.
+        # Si su cuenta está vinculada a un trabajador, va directo a su perfil
+        # (de solo lectura). Si no, se le explica por qué no puede entrar.
+        trabajador_propio = trabajador_del_usuario(request.user)
+        if trabajador_propio:
+            return redirect("trabajadores:detalle", trabajador_id=trabajador_propio.pk)
+        return render(
+            request,
+            "trabajadores/sin_vinculo.html",
+            _contexto_base({"titulo": "Mi Perfil"}),
+        )
+
     trabajadores = Trabajador.objects.select_related("cargo", "especialidad")
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
@@ -125,22 +138,42 @@ def editar_trabajador(request, trabajador_id):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
 def detalle_trabajador(request, trabajador_id):
-    """Perfil del trabajador y gestión de documentos (3.3)."""
+    """Perfil del trabajador y gestión de documentos (3.3).
+
+    Supervisores/admins: pueden ver el perfil de cualquiera y subir documentos.
+    Cualquier otro usuario: solo puede ver SU PROPIO perfil, en modo lectura
+    (sin edición, sin subir documentos, sin cambiar estado).
+    """
     trabajador = get_object_or_404(
         Trabajador.objects.select_related("cargo", "especialidad"),
         pk=trabajador_id,
     )
-    doc_form = DocumentoTrabajadorForm(request.POST or None, request.FILES or None)
 
-    if request.method == "POST" and doc_form.is_valid():
-        documento = doc_form.save(commit=False)
-        documento.trabajador = trabajador
-        documento.subido_por = request.user
-        documento.save()
-        messages.success(request, "Documento subido correctamente.")
-        return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+    es_supervisor = _puede_gestionar(request.user)
+
+    if not es_supervisor:
+        trabajador_propio = trabajador_del_usuario(request.user)
+        if not trabajador_propio or trabajador_propio.pk != trabajador.pk:
+            # No es su perfil: no se le explica por qué, simplemente no puede entrar.
+            raise PermissionDenied(
+                "Acceso denegado: solo puedes ver tu propio perfil."
+            )
+
+    doc_form = None
+    if es_supervisor:
+        doc_form = DocumentoTrabajadorForm(request.POST or None, request.FILES or None)
+        if request.method == "POST" and doc_form.is_valid():
+            documento = doc_form.save(commit=False)
+            documento.trabajador = trabajador
+            documento.subido_por = request.user
+            documento.save()
+            messages.success(request, "Documento subido correctamente.")
+            return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+    elif request.method == "POST":
+        # Un usuario sin permisos no debería poder llegar aquí (el formulario
+        # ni siquiera se muestra en su vista), pero por si acaso se ignora.
+        raise PermissionDenied()
 
     return render(
         request,
@@ -150,6 +183,7 @@ def detalle_trabajador(request, trabajador_id):
                 "trabajador": trabajador,
                 "documentos": trabajador.documentos.all(),
                 "doc_form": doc_form,
+                "es_supervisor": es_supervisor,
                 "titulo": f"Perfil — {trabajador}",
             }
         ),
@@ -185,11 +219,15 @@ def cambiar_estado(request, trabajador_id):
 
 @login_required
 def servir_foto(request, trabajador_id):
-    """Sirve la foto solo a usuarios autorizados (3.4)."""
-    if not _puede_gestionar(request.user):
-        return HttpResponseForbidden()
-
+    """Sirve la foto solo a usuarios autorizados (3.4): supervisores/admins,
+    o el propio trabajador viendo su propia foto."""
     trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
+
+    if not _puede_gestionar(request.user):
+        propio = trabajador_del_usuario(request.user)
+        if not propio or propio.pk != trabajador.pk:
+            return HttpResponseForbidden()
+
     if not trabajador.foto:
         raise Http404()
 
@@ -202,11 +240,15 @@ def servir_foto(request, trabajador_id):
 
 @login_required
 def ver_documento(request, documento_id):
-    """Visualización de documentos (3.3)."""
-    if not _puede_gestionar(request.user):
-        return HttpResponseForbidden()
-
+    """Visualización de documentos (3.3): supervisores/admins ven cualquiera;
+    el resto de usuarios solo pueden ver documentos de su propio trabajador."""
     documento = get_object_or_404(DocumentoTrabajador, pk=documento_id)
+
+    if not _puede_gestionar(request.user):
+        propio = trabajador_del_usuario(request.user)
+        if not propio or propio.pk != documento.trabajador_id:
+            return HttpResponseForbidden()
+
     content_type = (
         mimetypes.guess_type(documento.archivo.name)[0] or "application/octet-stream"
     )
@@ -220,7 +262,16 @@ def ver_documento(request, documento_id):
 
 @login_required
 def descargar_documento(request, documento_id):
+    """Antes esta vista no verificaba permisos: cualquier usuario logueado podía
+    descargar el documento de cualquier trabajador adivinando el id. Se cierra
+    con el mismo criterio que ver_documento."""
     documento = get_object_or_404(DocumentoTrabajador, pk=documento_id)
+
+    if not _puede_gestionar(request.user):
+        propio = trabajador_del_usuario(request.user)
+        if not propio or propio.pk != documento.trabajador_id:
+            return HttpResponseForbidden()
+
     response = FileResponse(
         documento.archivo.open("rb"),
         as_attachment=True,

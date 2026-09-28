@@ -9,38 +9,317 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="{% static 'usuarios/css/styles.css' %}">
+<style>
+  /* ═══════════════════════════════════════════════════════════
+     Todo lo de aquí abajo reutiliza EXCLUSIVAMENTE los colores
+     definidos en styles.css (--color-burdeos, --color-rosa, etc.)
+     No se introduce ningún color nuevo — solo forma, tipografía
+     y profundidad.
+     ═══════════════════════════════════════════════════════════ */
+
+  .login-page {
+    background:
+      radial-gradient(circle at 12% 15%, var(--color-burdeos-light) 0%, transparent 38%),
+      radial-gradient(circle at 90% 85%, var(--color-rosa-light) 0%, transparent 45%),
+      var(--color-rosa);
+  }
+
+  .login-card {
+    max-width: 940px;
+    min-height: 560px;
+    box-shadow: 0 30px 60px rgba(91,138,184,0.28), var(--shadow-lg);
+    animation: loginEntrada 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes loginEntrada {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Panel izquierdo: credencial de acceso ── */
+  .login-panel-izquierdo {
+    position: relative;
+    justify-content: center;
+    padding: 44px 40px 40px;
+    overflow: hidden;
+    background: linear-gradient(155deg, var(--color-burdeos-dark) 0%, #4c7aa3 100%);
+  }
+
+  .login-panel-izquierdo::before {
+    /* textura sutil de profundidad, sin color nuevo */
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 16px);
+    pointer-events: none;
+  }
+
+  .credencial-zona {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .credencial {
+    width: 208px;
+    aspect-ratio: 208 / 132;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 16px;
+    backdrop-filter: blur(2px);
+    padding: 14px 16px;
+    position: relative;
+    transform: rotate(-6deg);
+    box-shadow: 0 20px 34px rgba(0,0,0,0.22);
+    animation: credencialGiro 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.12s backwards;
+  }
+
+  @keyframes credencialGiro {
+    from { opacity: 0; transform: rotate(-16deg) scale(0.9); }
+    to   { opacity: 1; transform: rotate(-6deg) scale(1); }
+  }
+
+  .credencial-franja {
+    position: absolute; top: 24px; left: 0; right: 0; height: 15px;
+    background: rgba(255,255,255,0.32);
+  }
+
+  .credencial-foto {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.16);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 3px;
+  }
+
+  .credencial-foto svg { width: 18px; height: 18px; color: #fff; }
+
+  .credencial-lineas { margin-top: 38px; display: flex; flex-direction: column; gap: 6px; }
+  .credencial-lineas span { display: block; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.32); }
+  .credencial-lineas span:first-child { width: 72%; }
+  .credencial-lineas span:last-child { width: 48%; background: rgba(255,255,255,0.2); }
+
+  .credencial-sello {
+    position: absolute; bottom: 10px; right: 12px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px dashed rgba(255,255,255,0.4);
+  }
+
+  .marca { position: relative; z-index: 1; text-align: center; margin-top: 34px; }
+
+  .login-panel-izquierdo .brand-titulo {
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+  }
+
+  .login-panel-izquierdo .brand-divisor { margin: 14px auto; }
+
+  .login-panel-izquierdo .brand-subtitulo {
+    max-width: 26ch;
+    margin: 0 auto;
+  }
+
+  /* ── Lista de características (llena el espacio con contenido real) ── */
+  .caracteristicas {
+    position: relative; z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 30px;
+    padding-top: 26px;
+    border-top: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .caracteristica {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .caracteristica-icono {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .caracteristica-icono svg { width: 15px; height: 15px; color: #fff; }
+
+  .caracteristica-texto {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.3;
+  }
+
+  /* ── Panel derecho: formulario con más aire y jerarquía ── */
+  .login-panel-derecho {
+    padding: 52px 48px;
+    align-items: stretch;
+  }
+
+  .login-encabezado { margin-bottom: 30px; }
+
+  .login-titulo {
+    text-align: left;
+    margin-bottom: 6px;
+    font-size: 1.55rem;
+  }
+
+  .login-ayuda {
+    font-size: 0.85rem;
+    color: var(--color-texto-suave);
+    margin: 0;
+  }
+
+  .campo-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-texto);
+    margin-bottom: 6px;
+  }
+
+  .input-con-icono { position: relative; }
+
+  .input-con-icono svg {
+    position: absolute;
+    left: 16px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    color: var(--color-texto-suave);
+    pointer-events: none;
+  }
+
+  .login-panel-derecho .form-input {
+    padding-left: 42px;
+  }
+
+  .form-check-wrapper { margin-top: 2px; }
+
+  .btn-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-login svg { width: 16px; height: 16px; }
+
+  .fila-checkbox-olvido {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .fila-checkbox-olvido .form-check-wrapper { margin-bottom: 0; }
+
+  .enlace-olvido {
+    font-size: 0.8rem;
+    color: var(--color-burdeos-dark);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .enlace-olvido:hover { text-decoration: underline; }
+
+  .login-pie {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--color-gris-linea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--color-texto-suave);
+    font-size: 0.76rem;
+  }
+
+  .login-pie svg { width: 13px; height: 13px; color: var(--color-exito); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .login-card, .credencial { animation: none; }
+  }
+</style>
 </head>
 <body>
 
 <div class="login-page">
   <div class="login-card" role="main">
 
-    <!-- ══════ Panel izquierdo (burdeos oscuro) ══════ -->
+    <!-- ══════ Panel izquierdo: credencial de acceso ══════ -->
     <div class="login-panel-izquierdo" aria-hidden="true">
-      <div class="brand-logo">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-             stroke="currentColor" stroke-width="1.8">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
-               2.25 2.25 0 0 0 3 8.25v7.5A2.25 2.25 0 0 0 5.25 18h13.5A2.25 2.25 0 0 0
-               21 15.75v-7.5a2.25 2.25 0 0 0-.598-1.536A11.96 11.96 0 0 1 12 2.714Z"/>
-        </svg>
+      <div class="credencial-zona">
+        <div class="credencial">
+          <div class="credencial-franja"></div>
+          <div class="credencial-foto">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6
+                   2.25 2.25 0 0 0 3 8.25v7.5A2.25 2.25 0 0 0 5.25 18h13.5A2.25 2.25 0 0 0
+                   21 15.75v-7.5a2.25 2.25 0 0 0-.598-1.536A11.96 11.96 0 0 1 12 2.714Z"/>
+            </svg>
+          </div>
+          <div class="credencial-lineas">
+            <span></span>
+            <span></span>
+          </div>
+          <div class="credencial-sello"></div>
+        </div>
       </div>
-      <div class="brand-divisor"></div>
-      <p class="brand-titulo">Sistema de Gestión DSI</p>
-      <p class="brand-subtitulo">
-        Plataforma de administración<br>de personal y seguridad
-      </p>
+
+      <div class="marca">
+        <p class="brand-titulo">Sistema de Gestión DSI</p>
+        <div class="brand-divisor"></div>
+        <p class="brand-subtitulo">Control de personal, turnos y seguridad en un solo lugar.</p>
+      </div>
+
+      <div class="caracteristicas">
+        <div class="caracteristica">
+          <div class="caracteristica-icono">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+          </div>
+          <span class="caracteristica-texto">Turnos organizados en tiempo real</span>
+        </div>
+        <div class="caracteristica">
+          <div class="caracteristica-icono">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+            </svg>
+          </div>
+          <span class="caracteristica-texto">Acceso por roles y jerarquías</span>
+        </div>
+        <div class="caracteristica">
+          <div class="caracteristica-icono">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6M9 8h6M5.25 4.5h13.5A1.5 1.5 0 0 1 20.25 6v14.25L17.25 18l-3 2.25-3-2.25-3 2.25-3-2.25V6a1.5 1.5 0 0 1 1.5-1.5Z"/>
+            </svg>
+          </div>
+          <span class="caracteristica-texto">Auditoría de cada acción</span>
+        </div>
+      </div>
     </div>
 
     <!-- ══════ Panel derecho (formulario) ══════ -->
     <div class="login-panel-derecho">
 
-      <h1 class="login-titulo">Iniciar Sesión</h1>
+      <div class="login-encabezado">
+        <h1 class="login-titulo">Iniciar sesión</h1>
+        <p class="login-ayuda">Acceso exclusivo para personal autorizado.</p>
+      </div>
 
       <!-- Alertas de errores del servidor (Subtarea 1.3) -->
       {% if messages %}
-      <div class="alertas-container" role="alert" aria-live="polite" style="width:100%; margin-bottom:16px;">
+      <div class="alertas-container" role="alert" aria-live="polite">
         {% for message in messages %}
         <div class="alerta alerta-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}exito{% else %}info{% endif %}">
           <span class="alerta-icono">
@@ -55,7 +334,7 @@
 
       <!-- Errores no field del formulario Django (Subtarea 1.3) -->
       {% if form.non_field_errors %}
-      <div class="alertas-container" role="alert" aria-live="polite" style="width:100%; margin-bottom:16px;">
+      <div class="alertas-container" role="alert" aria-live="polite">
         {% for error in form.non_field_errors %}
         <div class="alerta alerta-error">
           <span class="alerta-icono">⚠</span>
@@ -76,7 +355,14 @@
 
         <!-- Campo: Correo Electrónico -->
         <div class="form-group">
-          {{ form.username }}
+          <label class="campo-label" for="{{ form.username.id_for_label }}">Correo electrónico</label>
+          <div class="input-con-icono">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0-.828.672-1.5 1.5-1.5h16.5c.828 0 1.5.672 1.5 1.5v10.5a1.5 1.5 0 0 1-1.5 1.5H3.75a1.5 1.5 0 0 1-1.5-1.5V6.75Z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 6.75 9.75 6.75 9.75-6.75"/>
+            </svg>
+            {{ form.username }}
+          </div>
           {% if form.username.errors %}
             <span class="form-error-msg visible" role="alert">
               {{ form.username.errors.0 }}
@@ -88,7 +374,13 @@
 
         <!-- Campo: Contraseña -->
         <div class="form-group">
-          {{ form.password }}
+          <label class="campo-label" for="{{ form.password.id_for_label }}">Contraseña</label>
+          <div class="input-con-icono">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+            </svg>
+            {{ form.password }}
+          </div>
           {% if form.password.errors %}
             <span class="form-error-msg visible" role="alert">
               {{ form.password.errors.0 }}
@@ -98,22 +390,31 @@
           {% endif %}
         </div>
 
-        <!-- Recordar contraseña (del mockup) -->
-        <label class="form-check-wrapper" for="id_remember_me">
-          {{ form.remember_me }}
-          <span class="form-check-label">Recordar contraseña</span>
-        </label>
+        <div class="fila-checkbox-olvido">
+          <label class="form-check-wrapper" for="id_remember_me">
+            {{ form.remember_me }}
+            <span class="form-check-label">Recordar contraseña</span>
+          </label>
+          <a href="{% url 'usuarios:password_reset' %}" class="enlace-olvido">¿Olvidaste tu contraseña?</a>
+        </div>
 
-        <!-- Botón submit con indicador de carga (Subtarea 1.3) -->
+      
         <button type="submit"
                 id="btn-login"
                 class="btn-login"
                 aria-label="Iniciar sesión en el sistema">
-          <span class="btn-texto">Iniciar Sesión</span>
+          <span class="btn-texto">Iniciar sesión</span>
           <span class="spinner" aria-hidden="true"></span>
         </button>
 
       </form>
+
+      <div class="login-pie">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/>
+        </svg>
+        <span>Conexión segura y cifrada</span>
+      </div>
 
     </div>
     <!-- /panel-derecho -->

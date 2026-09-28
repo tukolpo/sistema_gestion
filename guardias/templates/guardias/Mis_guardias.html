@@ -1,0 +1,85 @@
+{% extends "usuarios/base.html" %}
+{% load static %}
+
+{% block titulo %}Mis Guardias{% endblock %}
+{% block topbar_titulo %}Mis Guardias{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'guardias/css/guardias.css' %}?v={% now 'U' %}">
+{% endblock %}
+
+{% block contenido %}
+
+<div class="guardias-compacto">
+
+  {% if sin_trabajador %}
+  <div class="alerta alerta-error">
+    Tu cuenta no está vinculada a ningún trabajador, por eso no podemos mostrarte tus guardias.
+    Pide a un administrador que registre el correo de tu cuenta
+    ({{ user.email|default:"sin correo" }}) en tu ficha de trabajador.
+  </div>
+
+  {% else %}
+
+  <!-- Se muestra solo si hay una guardia próxima; lo llena mis_guardias.js -->
+  <div id="proxima-guardia" class="proxima-guardia" hidden>
+    <i class="fas fa-bell proxima-guardia-icono"></i>
+    <div>
+      <span class="proxima-guardia-etiqueta">Tu próxima guardia</span>
+      <span id="proxima-guardia-texto" class="proxima-guardia-texto">—</span>
+    </div>
+  </div>
+
+  <div class="mis-guardias-nav">
+    <button type="button" class="btn-nav-semana" id="btn-mes-anterior" title="Mes anterior">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="mis-guardias-nav-centro">
+      <span id="mis-guardias-mes" class="mis-guardias-mes">—</span>
+      <button type="button" class="btn-nav-hoy" id="btn-mes-hoy">Hoy</button>
+    </div>
+    <button type="button" class="btn-nav-semana" id="btn-mes-siguiente" title="Mes siguiente">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
+  <div class="mini-calendario">
+    <div class="mini-calendario-encabezado">
+      <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+    </div>
+    <div class="mini-calendario-grid" id="mini-calendario-grid">
+      <!-- JS arma aquí los días del mes -->
+    </div>
+  </div>
+
+  <!-- Detalle del día seleccionado; aparece al hacer clic en un día con guardia -->
+  <div id="detalle-dia" class="detalle-dia" hidden>
+    <i class="fas fa-calendar-day detalle-dia-icono"></i>
+    <div>
+      <span id="detalle-dia-fecha" class="detalle-dia-fecha">—</span>
+      <span id="detalle-dia-info" class="detalle-dia-info">—</span>
+    </div>
+    <button type="button" id="cerrar-detalle-dia" class="detalle-dia-cerrar" aria-label="Cerrar detalle">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <div class="mis-guardias-leyenda">
+    <span><i style="background: rgba(43,107,58,.35);"></i> Turno aprobado</span>
+    <span><i style="background: rgba(180,120,20,.35);"></i> Turno pendiente de aprobación</span>
+  </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if not sin_trabajador %}
+<script>
+  window.MIS_GUARDIAS_URL = "{{ api_mis_guardias_url }}";
+  window.MIS_GUARDIAS_INICIAL = { anio: {{ anio_actual }}, mes: {{ mes_actual }} };
+</script>
+<script src="{% static 'guardias/js/mis_guardias.js' %}?v={% now 'U' %}"></script>
+{% endif %}
+{% endblock %}

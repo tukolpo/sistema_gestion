@@ -5,8 +5,10 @@
 
 {% block topbar_acciones %}
 <a href="{% url 'trabajadores_ext:credencial_qr' trabajador.id %}" class="btn-accion"><i class="fas fa-qrcode me-1"></i> Ver credencial QR</a>
+{% if es_supervisor %}
 <a href="{% url 'trabajadores:editar' trabajador.id %}" class="btn-accion btn-guardar"><i class="fas fa-user-edit me-1"></i> Editar perfil</a>
 <a href="{% url 'trabajadores:lista' %}" class="btn-accion" style="background:#ccc; color:#333;"><i class="fas fa-arrow-left me-1"></i> Volver</a>
+{% endif %}
 {% endblock %}
 
 {% block contenido %}
@@ -29,6 +31,7 @@
       {{ trabajador.get_estado_display }}
     </span>
 
+    {% if es_supervisor %}
     <form method="post" action="{% url 'trabajadores:estado' trabajador.id %}" style="margin-top:16px;">
       {% csrf_token %}
       <button type="submit" class="btn-accion"
@@ -36,6 +39,7 @@
         {% if trabajador.esta_activo %}<i class="fas fa-user-slash me-1"></i> Marcar inactivo{% else %}<i class="fas fa-user-check me-1"></i> Marcar activo{% endif %}
       </button>
     </form>
+    {% endif %}
   </div>
 
   <div>
@@ -75,6 +79,7 @@
       <p style="color:#666;">Sin documentos adjuntos.</p>
       {% endif %}
 
+      {% if es_supervisor %}
       <h4><i class="fas fa-cloud-upload-alt me-1"></i> Subir documento</h4>
       <form method="post" enctype="multipart/form-data" style="max-width:480px;">
         {% csrf_token %}
@@ -87,6 +92,7 @@
         {% endfor %}
         <button type="submit" class="btn-accion btn-guardar"><i class="fas fa-upload me-1"></i> Subir</button>
       </form>
+      {% endif %}
     </div>
   </div>
 </div>

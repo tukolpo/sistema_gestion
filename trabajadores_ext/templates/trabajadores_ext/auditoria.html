@@ -4,40 +4,25 @@
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
 {% block topbar_acciones %}
-<form method="get" action="{% url 'trabajadores_ext:auditoria' %}" style="display:flex; gap:8px; flex-wrap:wrap;">
-  <input type="search" name="q" value="{{ busqueda }}" placeholder="Buscar..." class="form-input">
-  <select name="accion" class="form-input select-rol" onchange="this.form.submit()" aria-label="Filtrar por acción">
+<form method="get" action="{% url 'trabajadores_ext:auditoria' %}" role="search"
+  style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+  <label class="barra-busqueda" for="input-busqueda-auditoria" style="display:flex; align-items:center; position:relative;">
+    <i class="fas fa-search" style="position:absolute; left:12px; color:var(--color-texto-suave,#6c757d); font-size:0.9rem;" aria-hidden="true"></i>
+    <input type="search" id="input-busqueda-auditoria" name="q" value="{{ busqueda }}"
+      placeholder="Buscar trabajador o usuario..." autocomplete="off" style="padding-left:36px;">
+  </label>
+  <select name="accion" class="select-rol" onchange="this.form.submit()" aria-label="Filtrar por acción">
     <option value="">Todas las acciones</option>
     {% for val, label in acciones %}
     <option value="{{ val }}" {% if filtro_accion == val %}selected{% endif %}>{{ label }}</option>
     {% endfor %}
   </select>
+  {% if busqueda or filtro_accion %}
+  <a href="{% url 'trabajadores_ext:auditoria' %}" style="font-size:.82rem; color:var(--color-burdeos); text-decoration:none;">
+    Limpiar
+  </a>
+  {% endif %}
 </form>
-{% endblock %}
-
-{% block contenido %}
-<div class="tabla-card" role="region">
-  <div class="tabla-header-row" role="row">
-    <span><i class="fas fa-calendar-alt me-1"></i> Fecha</span>
-    <span><i class="fas fa-bolt me-1"></i> Acción</span>
-    <span><i class="fas fa-user me-1"></i> Trabajador</span>
-    <span><i class="fas fa-user-shield me-1"></i> Usuario</span>
-    <span><i class="fas fa-info-circle me-1"></i> Detalle</span>
-  </div>
-  <div class="tabla-body">
-    {% for r in registros %}
-    <div class="tabla-fila" role="row">
-      <div><span class="celda-email">{{ r.creado_en|date:"d/m/Y H:i" }}</span></div>
-      <div><span class="badge-rol">{{ r.get_accion_display }}</span></div>
-      <div><span class="celda-email">{{ r.trabajador|default:"—" }}</span></div>
-      <div><span class="celda-email">{{ r.usuario.username|default:"—" }}</span></div>
-      <div><span class="celda-email">{{ r.valor_nuevo|default:r.ruta|truncatechars:60 }}</span></div>
-    </div>
-    {% empty %}
-    <div class="tabla-vacia"><p>Sin registros.</p></div>
-    {% endfor %}
-  </div>
-</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -57,18 +42,304 @@
     font-size: 0.85rem;
     color: #333333;
     transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     width: auto;
   }
-
-  select.select-rol:hover {
-    border-color: #b0d0ef;
-  }
-
+  select.select-rol:hover { border-color: #b0d0ef; }
   select.select-rol:focus {
     outline: none;
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
   }
+
+  /* ── Fondo general de la sección ── */
+  .panel-area { background: #eef1f6; }
+
+  /* ── Stat cards ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #ffffff;
+    border: 1px solid #e4e9f2;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.05);
+  }
+  .stat-icono {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1.05rem;
+  }
+  .stat-label {
+    margin: 0; font-size: 0.7rem; color: var(--color-texto-suave, #6c757d);
+    text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600;
+  }
+  .stat-valor { margin: 3px 0 0; font-size: 1.5rem; font-weight: 800; color: #0f172a; }
+
+  /* ── Timeline ── */
+  .dia-separador {
+    display: flex; align-items: center; gap: 10px;
+    margin: 28px 0 14px;
+    font-size: 0.8rem; font-weight: 700; color: #334155;
+    text-transform: capitalize;
+  }
+  .dia-separador i {
+    background: #ffffff; width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  }
+  .dia-separador::after {
+    content: ""; flex: 1; height: 1px; background: #d9e0ec;
+  }
+
+  .timeline-card {
+    background: #ffffff;
+    border: 1px solid #e4e9f2;
+    border-radius: 14px;
+    padding: 0;
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    padding: 15px 18px 15px 15px;
+    border-bottom: 1px solid #f0f3f8;
+    border-left: 4px solid transparent;
+    transition: background 0.12s ease;
+  }
+  .timeline-item:hover {
+    background: #f8fafc;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+
+  .timeline-icono {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.95rem;
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+  }
+
+  .timeline-contenido { flex: 1; min-width: 0; }
+  .timeline-fila-superior {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
+  }
+  .timeline-badge-accion {
+    font-size: 0.72rem; font-weight: 700; padding: 4px 11px; border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
+  }
+  .timeline-contador {
+    font-size: 0.7rem; font-weight: 700; color: #ffffff; background: #64748b;
+    padding: 2px 9px; border-radius: 999px; margin-left: 6px;
+  }
+  .timeline-hora {
+    font-size: 0.78rem; color: #475569; font-weight: 600;
+    white-space: nowrap; background: #f1f5f9; padding: 3px 9px; border-radius: 999px;
+  }
+  .timeline-detalle {
+    margin: 8px 0 0; font-size: 0.87rem; color: #1e293b; font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+  .timeline-cambios {
+    list-style: none; margin: 8px 0 0; padding: 0;
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .timeline-cambios li {
+    font-size: 0.85rem; color: #1e293b;
+    background: #f8fafc; border: 1px solid #eef2f7;
+    border-radius: 7px; padding: 5px 10px;
+    overflow-wrap: anywhere;
+  }
+  .timeline-cambios li::before {
+    content: "\f061"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+    font-size: 0.65rem; color: #94a3b8; margin-right: 6px;
+  }
+  .timeline-meta {
+    margin: 6px 0 0; font-size: 0.78rem; color: var(--color-texto-suave, #6c757d);
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .timeline-meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .timeline-meta i { color: #94a3b8; }
+
+  /* ── Paginación ── */
+  .paginacion {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 22px; flex-wrap: wrap;
+  }
+  .paginacion a, .paginacion span.pagina-actual, .paginacion span.pagina-elipsis {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 34px; height: 34px; padding: 0 8px;
+    border-radius: 8px; font-size: 0.85rem; text-decoration: none;
+  }
+  .paginacion a {
+    color: #334155; border: 1.5px solid #dcedf8; background: #ffffff;
+  }
+  .paginacion a:hover { border-color: #4a90e2; color: #2E5C8A; }
+  .paginacion span.pagina-actual {
+    background: #2E5C8A; color: #ffffff; font-weight: 700;
+  }
+  .paginacion span.pagina-elipsis { color: #94a3b8; }
+
+  .tabla-vacia i.fa-inbox { color: var(--color-texto-suave); }
 </style>
+{% endblock %}
+
+{% block contenido %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icono" style="background:#e8f0fe;">
+      <i class="fas fa-list-check" style="color:#2E5C8A;"></i>
+    </div>
+    <div>
+      <p class="stat-label">Total eventos</p>
+      <p class="stat-valor">{{ total_eventos }}</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icono" style="background:#eef2f7;">
+      <i class="fas fa-eye" style="color:#64748b;"></i>
+    </div>
+    <div>
+      <p class="stat-label">Accesos hoy</p>
+      <p class="stat-valor">{{ accesos_hoy }}</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icono" style="background:#fff6e0;">
+      <i class="fas fa-pen" style="color:#8a5a00;"></i>
+    </div>
+    <div>
+      <p class="stat-label">Cambios hoy</p>
+      <p class="stat-valor">{{ cambios_hoy }}</p>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icono" style="background:#fdeceb;">
+      <i class="fas fa-trash" style="color:#8b1a2b;"></i>
+    </div>
+    <div>
+      <p class="stat-label">Eliminaciones totales</p>
+      <p class="stat-valor">{{ eliminaciones_totales }}</p>
+    </div>
+  </div>
+</div>
+
+{% if busqueda or filtro_accion %}
+<p style="margin-bottom:14px; font-size:.85rem; color:var(--color-texto-suave);">
+  Mostrando resultados filtrados
+  {% if busqueda %} para "<strong>{{ busqueda }}</strong>"{% endif %}
+  {% if filtro_accion %} · acción: <strong>{{ filtro_accion }}</strong>{% endif %}
+</p>
+{% endif %}
+
+{% if dias %}
+  {% for dia in dias %}
+  <div class="dia-separador">
+    <i class="fas fa-calendar-day" style="color:#94a3b8;"></i>
+    {{ dia.fecha|date:"l, d \d\e F \d\e Y" }}
+  </div>
+
+  <div class="timeline-card">
+    {% for item in dia.items %}
+    {% with r=item.registro %}
+    <div class="timeline-item" style="border-left-color:{{ item.color }};">
+      <div class="timeline-icono" style="background:{{ item.fondo }}; color:{{ item.color }};">
+        <i class="fas {{ item.icono }}"></i>
+      </div>
+      <div class="timeline-contenido">
+        <div class="timeline-fila-superior">
+          <div>
+            <span class="timeline-badge-accion" style="background:{{ item.fondo }}; color:{{ item.color }};">
+              {{ r.get_accion_display }}
+            </span>
+            {% if item.cantidad > 1 %}
+            <span class="timeline-contador" title="Este evento se repitió {{ item.cantidad }} veces seguidas">
+              ×{{ item.cantidad }}
+            </span>
+            {% endif %}
+          </div>
+          <span class="timeline-hora">
+            {% if item.cantidad > 1 %}
+              {{ item.desde|date:"H:i" }} – {{ item.hasta|date:"H:i" }}
+            {% else %}
+              {{ item.hasta|date:"H:i" }}
+            {% endif %}
+          </span>
+        </div>
+
+        {% if item.cambios %}
+        <ul class="timeline-cambios">
+          {% for cambio in item.cambios %}
+          <li>{{ cambio }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="timeline-detalle">{{ r.valor_nuevo|default:r.ruta|default:"Sin detalle adicional" }}</p>
+        {% endif %}
+
+        <div class="timeline-meta">
+          <span><i class="fas fa-user-shield"></i> {{ r.usuario.username|default:"Sistema" }}</span>
+          {% if r.trabajador %}
+          <span><i class="fas fa-id-badge"></i> {{ r.trabajador }}</span>
+          {% endif %}
+          {% if r.ip %}
+          <span><i class="fas fa-location-dot"></i> {{ r.ip }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  {% if pagina.paginator.num_pages > 1 %}
+  <div class="paginacion" role="navigation" aria-label="Paginación de auditoría">
+    {% if pagina.has_previous %}
+    <a href="?page={{ pagina.previous_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if filtro_accion %}&accion={{ filtro_accion }}{% endif %}" aria-label="Página anterior">
+      <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in pagina.paginator.page_range %}
+      {% if num == pagina.number %}
+        <span class="pagina-actual">{{ num }}</span>
+      {% elif num == 1 or num == pagina.paginator.num_pages or num|add:"-1" == pagina.number or num|add:"1" == pagina.number %}
+        <a href="?page={{ num }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if filtro_accion %}&accion={{ filtro_accion }}{% endif %}">{{ num }}</a>
+      {% elif num == 2 or num == pagina.paginator.num_pages|add:"-1" %}
+        <span class="pagina-elipsis">…</span>
+      {% endif %}
+    {% endfor %}
+
+    {% if pagina.has_next %}
+    <a href="?page={{ pagina.next_page_number }}{% if busqueda %}&q={{ busqueda }}{% endif %}{% if filtro_accion %}&accion={{ filtro_accion }}{% endif %}" aria-label="Página siguiente">
+      <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="tabla-card tabla-vacia" style="padding:48px; text-align:center; background:#ffffff; border:1px solid #e4e9f2; border-radius:14px; box-shadow:0 2px 8px rgba(15,23,42,0.05);">
+    <i class="fas fa-inbox" style="font-size:2.5rem; margin-bottom:10px; display:block;"></i>
+    <p>No se encontraron registros de auditoría{% if busqueda or filtro_accion %} con los filtros aplicados{% endif %}.</p>
+  </div>
+{% endif %}
+
 {% endblock %}

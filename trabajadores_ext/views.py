@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
@@ -95,30 +97,124 @@ def vista_perfil_publico(request, token):
     )
 
 
+# ─── Metadatos visuales por tipo de acción (icono + color) ───────────
+_ICONOS_ACCION = {
+    AuditoriaTrabajador.Accion.CREAR: ("fa-circle-plus", "#2b6b3a", "#e6f7ec"),
+    AuditoriaTrabajador.Accion.ACTUALIZAR: ("fa-pen", "#2E5C8A", "#e8f0fe"),
+    AuditoriaTrabajador.Accion.ELIMINAR: ("fa-trash", "#8b1a2b", "#fdeceb"),
+    AuditoriaTrabajador.Accion.ESTADO: ("fa-toggle-on", "#8a5a00", "#fff6e0"),
+    AuditoriaTrabajador.Accion.DOCUMENTO: ("fa-file-lines", "#5b3fa0", "#f1ecfb"),
+    AuditoriaTrabajador.Accion.QR_GENERADO: ("fa-qrcode", "#2E5C8A", "#e8f0fe"),
+    AuditoriaTrabajador.Accion.QR_ESCANEADO: ("fa-camera", "#2E5C8A", "#e8f0fe"),
+    AuditoriaTrabajador.Accion.ACCESO: ("fa-eye", "#64748b", "#eef2f7"),
+}
+_ICONO_DEFECTO = ("fa-circle-info", "#64748b", "#eef2f7")
+
+# Ventana de agrupación: entradas del MISMO usuario+acción+detalle consecutivas
+# en la lista (ya ordenada por fecha desc) se colapsan en una sola tarjeta.
+_LIMITE_REGISTROS = 1000
+
+
+def _agrupar_consecutivos(registros):
+    """Colapsa filas consecutivas idénticas (mismo usuario, acción y detalle)
+    en un solo grupo con contador, para reducir el ruido de accesos repetidos."""
+    grupos = []
+    actual = None
+
+    for r in registros:
+        detalle = r.valor_nuevo or r.ruta
+        clave = (r.usuario_id, r.accion, r.trabajador_id, detalle)
+
+        if actual and actual["clave"] == clave:
+            actual["cantidad"] += 1
+            actual["desde"] = r.creado_en  # vamos retrocediendo en el tiempo
+        else:
+            icono, color, fondo = _ICONOS_ACCION.get(r.accion, _ICONO_DEFECTO)
+            # Para "Actualizar" el detalle viene como "Campo: antes → después; Campo2: ...".
+            # Lo separamos para mostrarlo como una lista legible, no una frase larga.
+            cambios = []
+            if r.accion == AuditoriaTrabajador.Accion.ACTUALIZAR and r.valor_nuevo:
+                cambios = [c.strip() for c in r.valor_nuevo.split(";") if c.strip()]
+            actual = {
+                "clave": clave,
+                "registro": r,
+                "cantidad": 1,
+                "hasta": r.creado_en,
+                "desde": r.creado_en,
+                "icono": icono,
+                "color": color,
+                "fondo": fondo,
+                "cambios": cambios,
+            }
+            grupos.append(actual)
+
+    return grupos
+
+
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
 def vista_auditoria(request):
-    registros = AuditoriaTrabajador.objects.select_related("trabajador", "usuario")
+    base_qs = AuditoriaTrabajador.objects.select_related("trabajador", "usuario")
+
     q = request.GET.get("q", "").strip()
     accion = request.GET.get("accion", "").strip()
+
+    registros_qs = base_qs
     if q:
-        registros = registros.filter(
+        registros_qs = registros_qs.filter(
             Q(trabajador__nombre__icontains=q)
             | Q(trabajador__apellido__icontains=q)
             | Q(trabajador__cedula__icontains=q)
             | Q(usuario__username__icontains=q)
         )
     if accion in AuditoriaTrabajador.Accion.values:
-        registros = registros.filter(accion=accion)
+        registros_qs = registros_qs.filter(accion=accion)
+
+    # ── Estadísticas (sobre el total filtrado, no sobre la página actual) ──
+    hoy = timezone.localdate()
+    total_eventos = registros_qs.count()
+    accesos_hoy = registros_qs.filter(
+        accion=AuditoriaTrabajador.Accion.ACCESO, creado_en__date=hoy
+    ).count()
+    cambios_hoy = registros_qs.filter(creado_en__date=hoy).exclude(
+        accion=AuditoriaTrabajador.Accion.ACCESO
+    ).count()
+    eliminaciones_totales = registros_qs.filter(
+        accion=AuditoriaTrabajador.Accion.ELIMINAR
+    ).count()
+
+    # ── Agrupar consecutivos y paginar el resultado agrupado ──
+    registros = list(registros_qs[:_LIMITE_REGISTROS])
+    grupos = _agrupar_consecutivos(registros)
+
+    paginator = Paginator(grupos, 25)
+    numero_pagina = request.GET.get("page")
+    pagina = paginator.get_page(numero_pagina)
+
+    # ── Agrupar la página actual por día para la vista tipo timeline ──
+    dias = []
+    dia_actual = None
+    for item in pagina.object_list:
+        fecha_local = timezone.localtime(item["hasta"]).date()
+        if dia_actual is None or dia_actual["fecha"] != fecha_local:
+            dia_actual = {"fecha": fecha_local, "items": []}
+            dias.append(dia_actual)
+        dia_actual["items"].append(item)
+
     return render(
         request,
         "trabajadores_ext/auditoria.html",
         {
-            "registros": registros[:500],
+            "dias": dias,
+            "pagina": pagina,
             "busqueda": q,
             "filtro_accion": accion,
             "acciones": AuditoriaTrabajador.Accion.choices,
             "titulo": "Auditoría de trabajadores",
             "seccion_activa": "auditoria",
+            "total_eventos": total_eventos,
+            "accesos_hoy": accesos_hoy,
+            "cambios_hoy": cambios_hoy,
+            "eliminaciones_totales": eliminaciones_totales,
         },
     )

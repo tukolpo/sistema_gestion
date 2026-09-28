@@ -7,18 +7,11 @@
 {% block topbar_acciones %}
 <form id="form-filtros-trabajadores" role="search"
   style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-  
+
   <select id="filtro-cargo" name="cargo" class="form-input select-rol" aria-label="Filtrar por cargo">
     <option value="">Todos los cargos</option>
     {% for c in cargos %}
     <option value="{{ c.id }}">{{ c.nombre }}</option>
-    {% endfor %}
-  </select>
-
-  <select id="filtro-departamento" name="departamento" class="form-input select-rol" aria-label="Filtrar por departamento">
-    <option value="">Todos los departamentos</option>
-    {% for d in departamentos %}
-    <option value="{{ d }}">{{ d }}</option>
     {% endfor %}
   </select>
 
@@ -28,7 +21,7 @@
     <option value="INACTIVO">Inactivos</option>
   </select>
 
-  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:140px; display: flex; align-items: center; position: relative; margin-bottom: 0;">
+  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:150px; display: flex; align-items: center; position: relative; margin-bottom: 0;">
     <i class="fas fa-calendar-alt" style="position: absolute; left: 12px; color: var(--color-texto-suave, #6c757d); font-size: 0.85rem;" aria-hidden="true"></i>
     <input type="number" id="filtro-antiguedad" name="antiguedad" min="0" step="1"
       placeholder="Antigüedad (años)" class="form-input" style="width:100%; padding-left: 36px;"
@@ -44,10 +37,10 @@
     <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false" style="padding: 8px 14px;">
       <i class="fas fa-file-export me-1"></i> Exportar <i class="fas fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
     </button>
-    <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.1); min-width:140px; z-index:10;">
-      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-excel text-success me-2"></i>Excel</a>
-      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-csv text-info me-2"></i>CSV</a>
-      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:8px 14px; text-decoration:none; color:#333;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF</a>
+    <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 8px 20px rgba(15,23,42,0.12); min-width:150px; z-index:10; overflow:hidden;">
+      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-excel text-success me-2"></i>Excel</a>
+      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-csv text-info me-2"></i>CSV</a>
+      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF</a>
     </div>
   </div>
 
@@ -85,12 +78,10 @@
         var params = new URLSearchParams();
 
         var cargo = document.getElementById("filtro-cargo").value;
-        var departamento = document.getElementById("filtro-departamento").value;
         var estatus = document.getElementById("filtro-estatus").value;
         var antiguedad = document.getElementById("filtro-antiguedad").value;
 
         if (cargo) params.set("cargo", cargo);
-        if (departamento) params.set("departamento", departamento);
         if (estatus) params.set("estatus", estatus);
         if (antiguedad) params.set("antiguedad", antiguedad);
 
@@ -103,10 +94,7 @@
 
 {% block extra_css %}
 <style>
-  #contenedor-tabla-trabajadores .tabla-header-row,
-  #contenedor-tabla-trabajadores .tabla-fila {
-    grid-template-columns: 2fr 1.2fr 1.5fr 1.5fr 1fr 1fr 1.8fr;
-  }
+  .panel-area { background: #eef1f6; }
 
   select.select-rol {
     appearance: none;
@@ -125,21 +113,121 @@
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     width: auto;
+    background-color: #ffffff;
   }
-
-  select.select-rol:hover {
-    border-color: #b0d0ef;
-  }
-
+  select.select-rol:hover { border-color: #b0d0ef; }
   select.select-rol:focus {
     outline: none;
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
   }
+
+  /* ── Stat cards ── */
+  .stats-grid-trabajadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .stat-card-tb {
+    background: #ffffff;
+    border: 1px solid #e4e9f2;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .stat-card-tb:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  }
+  .stat-card-tb .stat-icono {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 1rem;
+  }
+  .stat-card-tb .stat-label {
+    margin: 0; font-size: 0.7rem; color: var(--color-texto-suave, #6c757d);
+    text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;
+  }
+  .stat-card-tb .stat-valor { margin: 2px 0 0; font-size: 1.35rem; font-weight: 800; color: #0f172a; }
+
+  /* ── Tabla ── */
+  #contenedor-tabla-trabajadores {
+    border: 1px solid #e4e9f2;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+  }
+  #contenedor-tabla-trabajadores .tabla-header-row,
+  #contenedor-tabla-trabajadores .tabla-fila {
+    grid-template-columns: 2fr 1.2fr 1.5fr 1fr 1fr 1.8fr;
+  }
+  #contenedor-tabla-trabajadores .tabla-fila {
+    transition: background 0.12s ease;
+  }
+  #contenedor-tabla-trabajadores .tabla-fila:hover {
+    background: #f8fafc;
+  }
+
+  /* ── Badges de estado con color real ── */
+  .badge-estado {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; font-weight: 700; padding: 4px 12px; border-radius: 999px;
+  }
+  .badge-estado::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%;
+  }
+  .badge-estado-activo { background: #e6f7ec; color: #2b6b3a; }
+  .badge-estado-activo::before { background: #2b6b3a; }
+  .badge-estado-inactivo { background: #fdeceb; color: #8b1a2b; }
+  .badge-estado-inactivo::before { background: #8b1a2b; }
+
+  /* ── Botones de acción compactos con icono ── */
+  .acciones-fila { display: flex; gap: 6px; flex-wrap: wrap; }
+  .btn-fila {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.8rem; font-weight: 600; padding: 6px 12px;
+    border-radius: 8px; border: none; cursor: pointer; text-decoration: none;
+    transition: filter 0.12s ease;
+  }
+  .btn-fila:hover { filter: brightness(0.94); }
+  .btn-fila-perfil { background: #eef2f7; color: #334155; }
+  .btn-fila-editar { background: #4a90e2; color: #ffffff; }
+  .btn-fila-activar { background: #2b6b3a; color: #ffffff; }
+  .btn-fila-desactivar { background: #8b1a2b; color: #ffffff; }
 </style>
 {% endblock %}
 
 {% block contenido %}
+
+<div class="stats-grid-trabajadores" id="stats-trabajadores" hidden>
+  <div class="stat-card-tb">
+    <div class="stat-icono" style="background:#e8f0fe;"><i class="fas fa-users" style="color:#2E5C8A;"></i></div>
+    <div>
+      <p class="stat-label">Total</p>
+      <p class="stat-valor" id="stat-total">—</p>
+    </div>
+  </div>
+  <div class="stat-card-tb">
+    <div class="stat-icono" style="background:#e6f7ec;"><i class="fas fa-user-check" style="color:#2b6b3a;"></i></div>
+    <div>
+      <p class="stat-label">Activos</p>
+      <p class="stat-valor" id="stat-activos" style="color:#2b6b3a;">—</p>
+    </div>
+  </div>
+  <div class="stat-card-tb">
+    <div class="stat-icono" style="background:#fdeceb;"><i class="fas fa-user-slash" style="color:#8b1a2b;"></i></div>
+    <div>
+      <p class="stat-label">Inactivos</p>
+      <p class="stat-valor" id="stat-inactivos" style="color:#8b1a2b;">—</p>
+    </div>
+  </div>
+</div>
+
 <div class="tabla-card" role="region" aria-live="polite" aria-busy="false"
   id="contenedor-tabla-trabajadores">
 
@@ -147,7 +235,6 @@
     <span><i class="fas fa-user me-1"></i> Trabajador</span>
     <span><i class="fas fa-id-card me-1"></i> Cédula</span>
     <span><i class="fas fa-briefcase me-1"></i> Cargo</span>
-    <span><i class="fas fa-building me-1"></i> Departamento</span>
     <span><i class="fas fa-clock me-1"></i> Antigüedad</span>
     <span><i class="fas fa-toggle-on me-1"></i> Estado</span>
     <span><i class="fas fa-sliders me-1"></i> Acciones</span>

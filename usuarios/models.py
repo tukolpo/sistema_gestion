@@ -54,6 +54,7 @@ class SecurityLog(models.Model):
         LOGIN_SUCCESS = "login_success", "Login exitoso"
         LOGIN_FAILED = "login_failed", "Login fallido"
         ACCESS_DENIED = "access_denied", "Acceso denegado"
+        USER_DELETED = "user_deleted", "Usuario eliminado"  # NUEVO
 
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     user = models.ForeignKey(

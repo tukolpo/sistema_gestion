@@ -1,4 +1,3 @@
-
 "use strict";
 
 (function () {
@@ -90,6 +89,7 @@
       return f.disponible;
     });
 
+    // 1) Select real (oculto): sigue siendo la fuente del valor que se envía
     select.innerHTML = "";
 
     if (disponibles.length === 0) {
@@ -98,21 +98,122 @@
       optVacio.value = "";
       optVacio.textContent = "— No hay funcionarios disponibles —";
       select.appendChild(optVacio);
+    } else {
+      select.disabled = false;
+      var optDefault = document.createElement("option");
+      optDefault.value = "";
+      optDefault.textContent = "— Seleccione un funcionario disponible —";
+      select.appendChild(optDefault);
+
+      disponibles.forEach(function (f) {
+        var opt = document.createElement("option");
+        opt.value = String(f.id);
+        opt.textContent = f.nombre_completo;
+        select.appendChild(opt);
+      });
+    }
+
+    // 2) Menú visual: se ve moderno y controla el select real al elegir
+    actualizarMenuFuncionarios(disponibles, select);
+  }
+
+  function actualizarMenuFuncionarios(disponibles, select) {
+    var boton = document.getElementById("btn-dropdown-funcionario");
+    var texto = document.getElementById("texto-dropdown-funcionario");
+    var lista = document.getElementById("lista-dropdown-funcionario");
+    if (!boton || !texto || !lista) {
       return;
     }
 
-    select.disabled = false;
-    var optDefault = document.createElement("option");
-    optDefault.value = "";
-    optDefault.textContent = "— Seleccione un funcionario disponible —";
-    select.appendChild(optDefault);
+    lista.innerHTML = "";
+    lista.hidden = true;
+    boton.setAttribute("aria-expanded", "false");
+
+    if (disponibles.length === 0) {
+      boton.disabled = true;
+      texto.textContent = "— No hay funcionarios disponibles —";
+      return;
+    }
+
+    boton.disabled = false;
+    texto.textContent = "— Seleccione un funcionario disponible —";
 
     disponibles.forEach(function (f) {
-      var opt = document.createElement("option");
-      opt.value = String(f.id);
-      opt.textContent = f.nombre_completo;
-      select.appendChild(opt);
+      var li = document.createElement("li");
+      li.className = "dropdown-opcion";
+      li.setAttribute("role", "option");
+      li.textContent = f.nombre_completo;
+      li.addEventListener("click", function () {
+        select.value = String(f.id);
+        texto.textContent = f.nombre_completo;
+        lista.querySelectorAll(".dropdown-opcion-activa").forEach(function (o) {
+          o.classList.remove("dropdown-opcion-activa");
+        });
+        li.classList.add("dropdown-opcion-activa");
+        cerrarMenuFuncionarios();
+      });
+      lista.appendChild(li);
     });
+  }
+
+  function abrirMenuFuncionarios() {
+    var boton = document.getElementById("btn-dropdown-funcionario");
+    var lista = document.getElementById("lista-dropdown-funcionario");
+    if (!boton || !lista || boton.disabled) return;
+    lista.hidden = false;
+    boton.setAttribute("aria-expanded", "true");
+  }
+
+  function cerrarMenuFuncionarios() {
+    var boton = document.getElementById("btn-dropdown-funcionario");
+    var lista = document.getElementById("lista-dropdown-funcionario");
+    if (!boton || !lista) return;
+    lista.hidden = true;
+    boton.setAttribute("aria-expanded", "false");
+  }
+
+  function inicializarMenuFuncionarios() {
+    var boton = document.getElementById("btn-dropdown-funcionario");
+    var lista = document.getElementById("lista-dropdown-funcionario");
+    if (!boton || !lista) return;
+
+    boton.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (lista.hidden) {
+        abrirMenuFuncionarios();
+      } else {
+        cerrarMenuFuncionarios();
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!lista.hidden && !lista.contains(e.target) && e.target !== boton) {
+        cerrarMenuFuncionarios();
+      }
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        cerrarMenuFuncionarios();
+      }
+    });
+
+    // Cuando cronograma.js hace form.reset() tras asignar, el <select> oculto
+    // vuelve a "", pero el botón visual no se entera solo: lo sincronizamos aquí.
+    var form = document.getElementById("form-asignacion");
+    if (form) {
+      form.addEventListener("reset", function () {
+        setTimeout(function () {
+          texto.textContent = boton.disabled
+            ? "— No hay funcionarios disponibles —"
+            : "— Seleccione un funcionario disponible —";
+          lista.querySelectorAll(".dropdown-opcion-activa").forEach(function (o) {
+            o.classList.remove("dropdown-opcion-activa");
+          });
+          cerrarMenuFuncionarios();
+        }, 0);
+      });
+    }
   }
 
   function mostrarCargando(els) {
@@ -202,6 +303,7 @@
       els.btnRecargar.addEventListener("click", cargarDisponibilidad);
     }
 
+    inicializarMenuFuncionarios();
     cargarDisponibilidad();
   }
 

@@ -1,4 +1,5 @@
 from trabajadores_ext.auditoria import registrar
+from trabajadores_ext.current_user import establecer_usuario_actual, limpiar_usuario_actual
 from trabajadores_ext.models import AuditoriaTrabajador
 
 
@@ -12,7 +13,19 @@ class AuditoriaTrabajadorMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        response = self.get_response(request)
+        # Deja disponible el usuario de esta petición para las señales
+        # (post_save/post_delete de Trabajador), que no reciben el request.
+        usuario_autenticado = (
+            request.user
+            if getattr(request, "user", None) and request.user.is_authenticated
+            else None
+        )
+        establecer_usuario_actual(usuario_autenticado)
+        try:
+            response = self.get_response(request)
+        finally:
+            limpiar_usuario_actual()
+
         if request.method not in ("GET", "HEAD", "OPTIONS"):
             return response
         if not request.user.is_authenticated:

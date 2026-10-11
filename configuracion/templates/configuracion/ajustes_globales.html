@@ -1,0 +1,43 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}Ajustes globales{% endblock %}
+
+{% block topbar_titulo %}Ajustes globales{% endblock %}
+
+{% block contenido %}
+<div class="card shadow-sm p-4">
+    <h2 class="mb-4">Ajustes globales del sistema</h2>
+    <p class="text-muted mb-4">Administre los parámetros generales y de seguridad del sistema.</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">
+                    {{ field.label }}{% if field.field.required %} *{% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="form-text text-muted">{{ field.help_text|safe }}</div>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ field.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

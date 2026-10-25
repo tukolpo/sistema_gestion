@@ -1,0 +1,72 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}Control de sesiones{% endblock %}
+
+{% block topbar_titulo %}Control de sesiones{% endblock %}
+
+{% block contenido %}
+<div class="tabla-card" style="padding:16px; margin-bottom:20px; display:flex; align-items:center; gap:12px;">
+  <div style="width:42px; height:42px; border-radius:10px; background:#e8f0fe; display:flex; align-items:center; justify-content:center;">
+    <i class="fas fa-desktop" style="color:#2E5C8A;"></i>
+  </div>
+  <div>
+    <p style="margin:0; font-size:0.7rem; color:var(--color-texto-suave); text-transform:uppercase;">Sesiones activas</p>
+    <p style="margin:0; font-size:1.3rem; font-weight:700;">{{ sesiones|length }}</p>
+  </div>
+</div>
+
+<div class="tabla-card" role="region" aria-label="Lista de sesiones activas">
+  <div class="tabla-header-row" role="row">
+    <span role="columnheader"><i class="fas fa-user me-1"></i> Usuario</span>
+    <span role="columnheader"><i class="fas fa-clock me-1"></i> Fecha de expiración</span>
+    <span role="columnheader"><i class="fas fa-key me-1"></i> Clave de sesión</span>
+    <span role="columnheader"><i class="fas fa-sliders me-1"></i> Acción</span>
+  </div>
+
+  <div class="tabla-body" role="rowgroup">
+    {% if sesiones %}
+      {% for sesion in sesiones %}
+      <div class="tabla-fila" role="row">
+        <div class="celda-usuario" role="cell">
+          <div class="avatar-mini" aria-hidden="true" style="background: linear-gradient(135deg, #4a90e2, #357abd); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%;">
+            {% if sesion.usuario %}{{ sesion.usuario.username|first|upper }}{% else %}?{% endif %}
+          </div>
+          <span class="celda-nombre">
+            {% if sesion.usuario %}
+              {{ sesion.usuario.get_full_name|default:sesion.usuario.username }}
+              {% if sesion.es_sesion_actual %}
+                <span class="badge-rol" style="margin-left:8px;">Sesión actual</span>
+              {% endif %}
+            {% else %}
+              Anónimo
+            {% endif %}
+          </span>
+        </div>
+
+        <div role="cell">
+          <span class="celda-email">{{ sesion.expire_date|date:"d/m/Y H:i" }}</span>
+        </div>
+
+        <div role="cell">
+          <span class="celda-email">{{ sesion.session_key }}</span>
+        </div>
+
+        <div role="cell" class="celda-acciones">
+          <form method="post" action="{% url 'configuracion:cerrar_sesion_admin' sesion.session_key %}" onsubmit="return confirm('¿Cerrar esta sesión?');">
+            {% csrf_token %}
+            <button type="submit" class="btn-accion" style="background:#8b1a2b; color:#ffffff; padding:6px 14px; font-size:0.85rem;">
+              <i class="fas fa-right-from-bracket me-1"></i> Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="tabla-vacia" role="cell">
+      <i class="fas fa-desktop" style="font-size: 2.5rem; color: var(--color-texto-suave); margin-bottom: 10px;" aria-hidden="true"></i>
+      <p>No hay sesiones activas en el sistema.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -13,7 +13,8 @@ urlpatterns = [
     path("api/guardias/", include("guardias.api_urls")),
     path("guardias/", include("guardias.urls")),
     path("vacaciones/", include("vacaciones.urls", namespace="vacaciones")),
-    
+    path("configuracion/", include("configuracion.urls", namespace="configuracion")),
+
 
 ]
 handler403 = "usuarios.views.vista_sin_permisos"

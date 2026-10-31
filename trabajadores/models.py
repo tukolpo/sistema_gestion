@@ -157,3 +157,55 @@ class DocumentoTrabajador(models.Model):
     @property
     def extension(self):
         return self.archivo.name.rsplit(".", 1)[-1].lower()
+
+
+class ReporteDescargado(models.Model):
+    """
+    Registro histórico de auditoría e integridad de reportes PDF generados (Tarea 3 - Integrante 3).
+    Garantiza la inalterabilidad al registrar el hash criptográfico SHA-256 en base de datos.
+    """
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reportes_descargados",
+        verbose_name="Generado por",
+    )
+    tipo_reporte = models.CharField(
+        max_length=100,
+        default="Planilla de Trabajadores (PDF)",
+        verbose_name="Tipo de reporte",
+    )
+    filtros_aplicados = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Filtros aplicados",
+    )
+    total_registros = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Total de registros",
+    )
+    hash_sha256 = models.CharField(
+        max_length=64,
+        db_index=True,
+        verbose_name="Código Hash SHA-256",
+    )
+    nombre_archivo = models.CharField(
+        max_length=255,
+        verbose_name="Nombre de archivo",
+    )
+    fecha_generacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de generación",
+    )
+
+    class Meta:
+        verbose_name = "Reporte Generado"
+        verbose_name_plural = "Reportes Generados"
+        ordering = ["-fecha_generacion"]
+
+    def __str__(self):
+        usuario_nom = self.usuario.username if self.usuario else "Sistema"
+        return f"{self.tipo_reporte} ({self.hash_sha256[:10]}...) - {usuario_nom} - {self.fecha_generacion:%d/%m/%Y %H:%M}"

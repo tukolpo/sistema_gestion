@@ -1,43 +1,71 @@
 {% extends "usuarios/base.html" %}
 
-{% block titulo %}Ajustes globales{% endblock %}
+{% block titulo %}Ajustes Globales{% endblock %}
 
-{% block topbar_titulo %}Ajustes globales{% endblock %}
+{% block topbar_titulo %}Ajustes Globales{% endblock %}
+
+{% block topbar_acciones %}
+<a href="{% url 'configuracion:control_sesiones' %}" class="btn-accion btn-guardar" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:8px 16px;">
+  <i class="fas fa-desktop" aria-hidden="true"></i> Control de Sesiones
+</a>
+{% endblock %}
 
 {% block contenido %}
-<div class="card shadow-sm p-4">
-    <h2 class="mb-4">Ajustes globales del sistema</h2>
-    <p class="text-muted mb-4">Administre los parámetros generales y de seguridad del sistema.</p>
+<div class="tabla-card" style="padding: 32px; max-width: 650px; margin: 0 auto;">
+  <div style="margin-bottom: 24px; border-bottom: 1px solid #eef2f7; padding-bottom: 14px;">
+    <h2 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0;">
+      <i class="fas fa-sliders text-primary me-2"></i> Ajustes Generales del Sistema
+    </h2>
+    <p style="font-size: 0.85rem; color: var(--color-texto-suave, #6c757d); margin: 4px 0 0;">
+      Administre los parámetros de seguridad, tiempos de sesión y funcionamiento general.
+    </p>
+  </div>
 
-    <form method="post" novalidate>
-        {% csrf_token %}
+  <form method="post" novalidate>
+    {% csrf_token %}
 
-        {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-                {{ form.non_field_errors }}
-            </div>
-        {% endif %}
+    {% if form.non_field_errors %}
+    <div class="alerta alerta-error" style="margin-bottom: 20px;">
+      <span class="alerta-icono">⚠</span>
+      <span>{{ form.non_field_errors }}</span>
+    </div>
+    {% endif %}
 
-        {% for field in form %}
-            <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">
-                    {{ field.label }}{% if field.field.required %} *{% endif %}
-                </label>
-                {{ field }}
-                {% if field.help_text %}
-                    <div class="form-text text-muted">{{ field.help_text|safe }}</div>
-                {% endif %}
-                {% if field.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ field.errors.0 }}
-                    </div>
-                {% endif %}
-            </div>
-        {% endfor %}
+    {% for field in form %}
+    <div class="form-group" style="margin-bottom: 18px;">
+      {% if field.field.widget.input_type == "checkbox" %}
+      <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+        {{ field }}
+        <label for="{{ field.id_for_label }}" style="font-weight: 600; font-size: 0.9rem; color: #334155; margin: 0; cursor: pointer;">
+          {{ field.label }}
+        </label>
+      </div>
+      {% else %}
+      <label for="{{ field.id_for_label }}" style="display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; color: #334155;">
+        {{ field.label }}{% if field.field.required %} *{% endif %}
+      </label>
+      {{ field }}
+      {% endif %}
 
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-        </div>
-    </form>
+      {% if field.help_text %}
+      <small style="display: block; color: var(--color-texto-suave); font-size: 0.75rem; margin-top: 4px;">
+        {{ field.help_text|safe }}
+      </small>
+      {% endif %}
+
+      {% if field.errors %}
+      <p style="color: #8b1a2b; font-size: 0.8rem; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+        <i class="fas fa-exclamation-circle"></i> {{ field.errors.0 }}
+      </p>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 28px; border-top: 1px solid #eef2f7; padding-top: 20px;">
+      <button type="submit" class="btn-accion btn-guardar" style="padding: 10px 24px; font-size: 0.9rem; border-radius: 8px;">
+        <i class="fas fa-check me-1"></i> Guardar Cambios
+      </button>
+    </div>
+  </form>
 </div>
 {% endblock %}

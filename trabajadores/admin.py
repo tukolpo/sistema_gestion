@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
+from .models import (
+    Cargo,
+    DocumentoTrabajador,
+    Especialidad,
+    ReporteDescargado,
+    Trabajador,
+)
 
 
 @admin.register(Cargo)
@@ -41,3 +47,28 @@ class TrabajadorAdmin(admin.ModelAdmin):
 class DocumentoTrabajadorAdmin(admin.ModelAdmin):
     list_display = ("titulo", "trabajador", "tipo", "subido_en", "subido_por")
     list_filter = ("tipo",)
+
+
+@admin.register(ReporteDescargado)
+class ReporteDescargadoAdmin(admin.ModelAdmin):
+    list_display = (
+        "tipo_reporte",
+        "usuario",
+        "total_registros",
+        "hash_sha256",
+        "nombre_archivo",
+        "fecha_generacion",
+    )
+    list_filter = ("tipo_reporte", "fecha_generacion")
+    search_fields = ("hash_sha256", "nombre_archivo", "usuario__username", "usuario__email")
+    readonly_fields = (
+        "usuario",
+        "tipo_reporte",
+        "filtros_aplicados",
+        "total_registros",
+        "hash_sha256",
+        "nombre_archivo",
+        "fecha_generacion",
+    )
+    ordering = ("-fecha_generacion",)
+

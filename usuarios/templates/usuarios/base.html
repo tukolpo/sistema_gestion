@@ -50,11 +50,13 @@
       {% if puede_gestionar_usuarios %}Trabajadores{% else %}Mi Perfil{% endif %}
       </a>
       
-      <a href="#"
+      {% if es_administrador %}
+      <a href="{% url 'configuracion:ajustes_globales' %}"
          class="nav-item {% if seccion_activa == 'configuracion' %}activo{% endif %}"
          id="nav-config">
         <i class="fas fa-cog me-2" style="width: 20px; text-align: center;"></i> Configuración
       </a>
+      {% endif %}
       {% if puede_gestionar_usuarios %}
       <a href="{% url 'usuarios:gestion_usuarios' %}"
          class="nav-item {% if seccion_activa == 'gestion_usuarios' %}activo{% endif %}"

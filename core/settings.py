@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "guardias",
     "vacaciones",
     "configuracion",
+    "reportes",
 ]
 
 

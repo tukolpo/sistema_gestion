@@ -33,3 +33,6 @@ Thumbs.db
 # base_de_datos_completa.sql
 
 staticfiles/
+
+__pycache__/
+*.pyc

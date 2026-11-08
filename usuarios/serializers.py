@@ -9,6 +9,8 @@ from usuarios.backends import EmailBackend
 from usuarios.constants import (
     MENSAJE_CREDENCIALES_INCORRECTAS,
     MENSAJE_CUENTA_BLOQUEADA,
+    MENSAJE_MANTENIMIENTO,
+    NIVEL_ADMINISTRADOR,
 )
 from usuarios.security import (
     buscar_usuario_por_email,
@@ -56,6 +58,14 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
                 MENSAJE_CREDENCIALES_INCORRECTAS,
                 code="authorization",
             )
+
+        try:
+            from configuracion.models import ConfiguracionGlobal
+            en_mantenimiento = ConfiguracionGlobal.obtener().modo_mantenimiento
+        except Exception:
+            en_mantenimiento = False
+        if en_mantenimiento and not user.tiene_rango_minimo(NIVEL_ADMINISTRADOR):
+            raise AuthenticationFailed(MENSAJE_MANTENIMIENTO, code="maintenance")
 
         attrs["username"] = user.get_username()
         data = super().validate(attrs)

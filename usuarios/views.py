@@ -13,6 +13,7 @@ from guardias.models import GuardiaTurno
 from datetime import date
 
 from usuarios.constants import (
+    MENSAJE_MANTENIMIENTO,
     NIVEL_ASIGNAR_ROLES,
     NIVEL_GESTION_USUARIOS,
     NIVEL_DASHBOARD_GENERAL,
@@ -22,11 +23,13 @@ from usuarios.decorators import requiere_jerarquia
 from usuarios.forms import LoginForm, CrearUsuarioForm
 from usuarios.models import Rol, SecurityLog, Usuario
 from usuarios.security import (
+    establecer_sesion_unica,
     nivel_usuario,
     registrar_evento,
     registrar_login_exitoso,
     roles_asignables,
 )
+from configuracion.models import ConfiguracionGlobal
 
 
 def vista_login(request):
@@ -37,11 +40,25 @@ def vista_login(request):
 
     if request.method == "POST" and form.is_valid():
         user = form.get_user()
+        try:
+            en_mantenimiento = ConfiguracionGlobal.obtener().modo_mantenimiento
+        except Exception:
+            en_mantenimiento = False
+        if en_mantenimiento and not user.tiene_rango_minimo(NIVEL_ADMINISTRADOR):
+            messages.warning(request, MENSAJE_MANTENIMIENTO)
+            return render(
+                request,
+                "usuarios/login.html",
+                {"form": form, "titulo": "Iniciar Sesión"},
+            )
+
         login(request, user)
         registrar_login_exitoso(request, user)
 
         if not form.cleaned_data.get("remember_me"):
             request.session.set_expiry(0)
+
+        establecer_sesion_unica(request, user)
 
         messages.success(
             request, f"¡Bienvenido, {user.first_name or user.username}!"
@@ -168,6 +185,7 @@ def vista_crear_usuario(request):
         "form": form,
         "titulo": "Nuevo Usuario",
         "seccion_activa": "gestion_usuarios",
+        "subseccion_activa": "crear_usuario",
     })
 
 

@@ -7,6 +7,7 @@ __pycache__/
 # Entornos virtuales
 venv/
 env/
+.venv/
 venv_old/
 
 # Base de datos local
@@ -30,3 +31,5 @@ Thumbs.db
 
 # Referencia SQL (opcional: quitar si el equipo versiona solo migraciones)
 # base_de_datos_completa.sql
+
+staticfiles/

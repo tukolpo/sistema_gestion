@@ -1,6 +1,8 @@
 import csv
+import hashlib
 import io
 import mimetypes
+import uuid
 from datetime import datetime
 
 from django.contrib import messages
@@ -15,12 +17,14 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pdfencrypt import StandardEncryption
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import (
@@ -36,8 +40,9 @@ from usuarios.constants import NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
 
 from .forms import DocumentoTrabajadorForm, TrabajadorForm
-from .models import Cargo, DocumentoTrabajador, Trabajador
+from .models import Cargo, DocumentoTrabajador, ReporteDescargado, Trabajador
 from .utils import cambiar_estado_trabajador, trabajador_del_usuario
+
 
 
 def _contexto_base(extra=None):
@@ -107,7 +112,11 @@ def crear_trabajador(request):
     return render(
         request,
         "trabajadores/formulario.html",
-        _contexto_base({"form": form, "titulo": "Nuevo Trabajador"}),
+        _contexto_base({
+            "form": form,
+            "titulo": "Nuevo Trabajador",
+            "subseccion_activa": "crear_trabajador",
+        }),
     )
 
 
@@ -432,40 +441,183 @@ def exportar_csv(request):
 @login_required
 @require_GET
 def exportar_pdf(request):
+    """
+    Tarea 3 (Integrante 3): Generación del PDF Inalterable.
+    - 3.1: Diseño profesional con ReportLab (encabezado, tabla con columnas ajustadas y pie).
+    - 3.2: Identificación del usuario emisor (request.user) y fecha/hora exacta.
+    - 3.3: Protección del PDF contra modificaciones (StandardEncryption sin contraseña de apertura pero con edición bloqueada).
+    - 3.4: Código Hash SHA-256 de integridad estampado en pie de página y registrado en la base de datos (ReporteDescargado).
+    """
     if not _puede_exportar(request.user):
         messages.error(request, "No tienes permiso para exportar datos.")
         return redirect("trabajadores:lista")
+
     filtros = _leer_filtros(request)
     qs = _aplicar_filtros(filtros)
     if not qs.exists():
         messages.warning(request, "No se encontraron resultados para exportar con los filtros aplicados.")
         return redirect("trabajadores:lista")
+
     registros = _qs_a_registros(qs)
+
+    # 3.2: Metadatos de fecha y usuario emisor
+    ahora = timezone.now()
+    fecha_emision = ahora.strftime("%d/%m/%Y %H:%M:%S")
+
+    if request.user.is_authenticated:
+        nombre_completo = request.user.get_full_name()
+        usuario_tag = f"{nombre_completo} ({request.user.username})" if nombre_completo else request.user.username
+        if request.user.is_superuser:
+            rol_desc = "Administrador"
+        elif request.user.groups.filter(name="supervisor").exists():
+            rol_desc = "Supervisor"
+        elif request.user.groups.filter(name="rrhh").exists():
+            rol_desc = "RRHH"
+        else:
+            rol_desc = "Usuario Autorizado"
+        info_emisor = f"{usuario_tag} — Rol: {rol_desc}"
+    else:
+        info_emisor = "Sistema"
+
+    # 3.4: Generación del Código Hash criptográfico SHA-256 para integridad de datos
+    payload_hash = f"DSI_REPORTE_PDF|U:{request.user.pk}|F:{fecha_emision}|FILTROS:{sorted(filtros.items())}|REG:{registros}"
+    hash_sha256 = hashlib.sha256(payload_hash.encode("utf-8")).hexdigest()
+
+    # 3.3: Configuración de Cifrado y Protección contra Edición (PDF Inalterable)
+    # Permite lectura e impresión sin pedir contraseña, pero bloquea modificación y anotación
+    clave_propietario = uuid.uuid4().hex
+    cifrado = StandardEncryption(
+        userPassword="",
+        ownerPassword=clave_propietario,
+        canModify=0,
+        canPrint=1,
+        canCopy=1,
+        canAnnotate=0,
+    )
+
     buf = io.BytesIO()
-    primario = colors.HexColor("#1A3A5C")
-    doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=1.5*cm, rightMargin=1.5*cm, topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=landscape(A4),
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
+        topMargin=1.8 * cm,
+        bottomMargin=2.0 * cm,
+        encrypt=cifrado,
+    )
+
+    # 3.1 & 3.4: Pie de página dinámico para cada página
+    def _pie_pagina_canvas(canvas, doc_obj):
+        canvas.saveState()
+        w, _ = landscape(A4)
+        # Línea divisoria inferior
+        canvas.setStrokeColor(colors.HexColor("#CBD5E1"))
+        canvas.setLineWidth(0.6)
+        canvas.line(1.5 * cm, 1.4 * cm, w - 1.5 * cm, 1.4 * cm)
+
+        canvas.setFont("Helvetica", 7.5)
+        canvas.setFillColor(colors.HexColor("#475569"))
+        canvas.drawString(1.5 * cm, 1.05 * cm, f"Emitido por: {info_emisor}  |  Fecha: {fecha_emision}")
+        canvas.setFont("Helvetica-Bold", 7.5)
+        canvas.drawString(1.5 * cm, 0.7 * cm, f"Código de Integridad SHA-256: {hash_sha256}")
+
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#64748B"))
+        canvas.drawRightString(w - 1.5 * cm, 1.05 * cm, f"Pág. {canvas.getPageNumber()}")
+        canvas.drawRightString(w - 1.5 * cm, 0.7 * cm, "Documento Oficial Inalterable — Sistema DSI")
+        canvas.restoreState()
+
     estilos = getSampleStyleSheet()
+    color_primario = colors.HexColor("#1A3A5C")
+
+    # 3.1: Encabezado del documento
     historia = [
-        Paragraph(_titulo_export(filtros), ParagraphStyle("T", parent=estilos["Heading1"], textColor=primario, fontSize=16, spaceAfter=4)),
-        Paragraph(f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}  |  Total: <b>{len(registros)}</b>",
-                  ParagraphStyle("S", parent=estilos["Normal"], textColor=colors.HexColor("#555555"), fontSize=9)),
-        HRFlowable(width="100%", thickness=2, color=primario, spaceAfter=10),
+        Paragraph(
+            _titulo_export(filtros),
+            ParagraphStyle(
+                "TituloPDF",
+                parent=estilos["Heading1"],
+                textColor=color_primario,
+                fontSize=15,
+                leading=18,
+                spaceAfter=3,
+            ),
+        ),
+        Paragraph(
+            f"<b>Fecha de emisión:</b> {fecha_emision} &nbsp;|&nbsp; "
+            f"<b>Generado por:</b> {info_emisor} &nbsp;|&nbsp; "
+            f"<b>Total listados:</b> {len(registros)} trabajador(es)",
+            ParagraphStyle(
+                "SubtituloPDF",
+                parent=estilos["Normal"],
+                textColor=colors.HexColor("#475569"),
+                fontSize=8.5,
+                leading=11,
+                spaceAfter=6,
+            ),
+        ),
+        HRFlowable(width="100%", thickness=1.5, color=color_primario, spaceAfter=8),
     ]
+
+    # 3.1: Tabla de registros formateada con anchos específicos (ancho útil = 26.7 cm)
+    anchos_columnas = [2.5 * cm, 5.5 * cm, 4.5 * cm, 4.5 * cm, 2.5 * cm, 3.2 * cm, 4.0 * cm]
     filas = [list(COLUMNAS_EXPORT.values())] + [[r[k] for k in COLUMNAS_EXPORT] for r in registros]
-    tabla = Table(filas, repeatRows=1)
+    tabla = Table(filas, colWidths=anchos_columnas, repeatRows=1)
     tabla.setStyle(TableStyle([
-        ("BACKGROUND",(0,0),(-1,0),primario), ("TEXTCOLOR",(0,0),(-1,0),colors.white),
-        ("FONTNAME",(0,0),(-1,0),"Helvetica-Bold"), ("FONTSIZE",(0,0),(-1,0),9),
-        ("ALIGN",(0,0),(-1,0),"CENTER"), ("BOTTOMPADDING",(0,0),(-1,0),8),
-        ("FONTNAME",(0,1),(-1,-1),"Helvetica"), ("FONTSIZE",(0,1),(-1,-1),8),
-        ("ROWBACKGROUNDS",(0,1),(-1,-1),[colors.white, colors.HexColor("#F0F4F8")]),
-        ("GRID",(0,0),(-1,-1),0.4,colors.HexColor("#CCCCCC")),
+        ("BACKGROUND", (0, 0), (-1, 0), color_primario),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, 0), 8.5),
+        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+        ("TOPPADDING", (0, 0), (-1, 0), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 5),
+        ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+        ("FONTSIZE", (0, 1), (-1, -1), 8),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#CBD5E1")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
-    historia += [tabla, Spacer(1,0.5*cm),
-                 Paragraph("Documento generado por el Sistema de Gestión de Personal — Uso interno",
-                            ParagraphStyle("P", parent=estilos["Normal"], textColor=colors.HexColor("#888888"), fontSize=8, alignment=TA_CENTER))]
-    doc.build(historia)
+    historia.append(tabla)
+    historia.append(Spacer(1, 0.5 * cm))
+
+    # 3.4: Certificado de Integridad visual al final del reporte
+    caja_certificado = [
+        [Paragraph(
+            f"<b>CERTIFICADO DE INTEGRIDAD DIGITAL (SHA-256):</b><br/>"
+            f'<font face="Courier" size="7.5" color="#1E3A8A"><b>{hash_sha256}</b></font><br/>'
+            f'<font size="7" color="#64748B">Este documento ha sido generado con medidas de seguridad e integridad inalterable. '
+            f'Cualquier modificación en el contenido o formato posterior a su emisión anula su validez institucional. '
+            f'Generado por: <b>{info_emisor}</b>.</font>',
+            ParagraphStyle("CertificadoTexto", parent=estilos["Normal"], leading=10),
+        )]
+    ]
+    tabla_certificado = Table(caja_certificado, colWidths=[26.7 * cm])
+    tabla_certificado.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#EFF6FF")),
+        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#93C5FD")),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+    ]))
+    historia.append(tabla_certificado)
+
+    # Construcción del documento
+    doc.build(historia, onFirstPage=_pie_pagina_canvas, onLaterPages=_pie_pagina_canvas)
+
+    # 3.4: Guardar registro histórico en la base de datos
+    nombre_archivo = _nombre_archivo(filtros, "pdf")
+    filtros_resumen = ", ".join(f"{k}={v}" for k, v in filtros.items()) if filtros else "Sin filtros específicos"
+    ReporteDescargado.objects.create(
+        usuario=request.user if request.user.is_authenticated else None,
+        tipo_reporte="Planilla de Trabajadores (PDF)",
+        filtros_aplicados=filtros_resumen[:255],
+        total_registros=len(registros),
+        hash_sha256=hash_sha256,
+        nombre_archivo=nombre_archivo,
+    )
+
     buf.seek(0)
     resp = HttpResponse(buf, content_type="application/pdf")
-    resp["Content-Disposition"] = f'attachment; filename="{_nombre_archivo(filtros,"pdf")}"'
-    return resp
+    resp["Content-Disposition"] = f'attachment; filename="{nombre_archivo}"'
+    return resp

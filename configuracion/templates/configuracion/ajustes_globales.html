@@ -1,0 +1,416 @@
+{% extends "usuarios/base.html" %}
+
+{% block titulo %}Configuración del Sistema{% endblock %}
+
+{% block topbar_titulo %}Configuración General{% endblock %}
+
+{% block extra_css %}
+<style>
+  .aj-pagina { max-width: 880px; margin: 0 auto; }
+
+  /* ── Banner de mantenimiento ── */
+  .aj-banner {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 18px; margin-bottom: 20px;
+    background: #FFF3E0; color: #8a4b00;
+    border: 1px solid #FFE0B2; border-left: 4px solid var(--color-alerta);
+    border-radius: var(--radius-md);
+    font-size: .88rem; line-height: 1.45;
+  }
+  .aj-banner i { margin-top: 2px; color: var(--color-alerta); }
+
+  /* ── Tarjetas ── */
+  .aj-card {
+    background: var(--color-blanco);
+    border: 1px solid var(--color-gris-medio);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .aj-card-cab {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 24px;
+    border-bottom: 1px solid #eef2f7;
+  }
+  .aj-card-icono {
+    width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #e8f0fe; color: #2E5C8A; font-size: 1.05rem;
+  }
+  .aj-card-icono.aviso { background: #FFF3E0; color: var(--color-alerta); }
+  .aj-card-titulo { margin: 0; font-size: 1.02rem; font-weight: 700; color: #1e293b; }
+  .aj-card-desc { margin: 2px 0 0; font-size: .8rem; color: var(--color-texto-suave); }
+  .aj-card-cuerpo { padding: 22px 24px 24px; }
+
+  /* ── Cuadrícula de campos ── */
+  .aj-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  @media (max-width: 820px) { .aj-grid { grid-template-columns: 1fr; } }
+
+  .aj-label {
+    display: block; margin-bottom: 6px;
+    font-size: .82rem; font-weight: 600; color: #334155;
+  }
+  .aj-input-wrap { position: relative; }
+  .aj-card .form-input {
+    border-radius: 10px;
+    padding: 11px 64px 11px 14px;
+    font-size: .95rem;
+    border: 1.5px solid #cbd5e1;
+  }
+  .aj-card .form-input:focus {
+    border-color: var(--color-burdeos-dark);
+    box-shadow: 0 0 0 3px rgba(91, 138, 184, .22);
+  }
+  .aj-card .form-input.aj-error { border-color: var(--color-error); }
+  .aj-unidad {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-size: .75rem; font-weight: 600; color: var(--color-texto-suave);
+    pointer-events: none; text-transform: lowercase;
+  }
+  .aj-ayuda { margin: 6px 0 0; font-size: .75rem; color: var(--color-texto-suave); line-height: 1.4; }
+  .aj-rango { margin: 2px 0 0; font-size: .72rem; color: #94a3b8; }
+  .aj-hint-vivo { margin: 4px 0 0; font-size: .75rem; font-weight: 600; color: #2E5C8A; min-height: 1em; }
+  .aj-err {
+    margin: 6px 0 0; font-size: .78rem; color: #8b1a2b;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* ── Interruptor ── */
+  .aj-fila-switch { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+  .aj-switch { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; flex-shrink: 0; }
+  .aj-switch input {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+  }
+  .aj-switch-track {
+    position: relative; width: 52px; height: 30px; border-radius: 30px;
+    background: #cbd5e1; transition: background .2s ease; flex-shrink: 0;
+  }
+  .aj-switch-thumb {
+    position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+    border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3);
+    transition: transform .2s ease;
+  }
+  .aj-switch input:checked + .aj-switch-track { background: var(--color-alerta); }
+  .aj-switch input:checked + .aj-switch-track .aj-switch-thumb { transform: translateX(22px); }
+  .aj-switch input:focus-visible + .aj-switch-track {
+    outline: 2px solid var(--color-burdeos-dark); outline-offset: 2px;
+  }
+  .aj-switch-estado { font-size: .85rem; font-weight: 700; color: #475569; min-width: 62px; }
+  .aj-switch input:checked ~ .aj-switch-estado { color: var(--color-alerta); }
+
+  .aj-mant-titulo { margin: 0; font-size: .95rem; font-weight: 700; color: #1e293b; }
+  .aj-aviso-activar {
+    display: none; margin-top: 14px; padding: 10px 14px;
+    background: #FFF3E0; color: #8a4b00; border-radius: 10px;
+    font-size: .8rem; line-height: 1.45;
+  }
+  .aj-aviso-activar.visible { display: block; }
+
+  /* ── Selector de color ── */
+  .aj-temas { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 14px; }
+  .aj-tema { cursor: pointer; display: block; }
+  .aj-tema input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .aj-tema-muestra {
+    display: flex; height: 54px; border-radius: 12px; overflow: hidden;
+    border: 2px solid #e2e8f0; transition: var(--transition);
+  }
+  .aj-tema-franja { flex: 1; }
+  .aj-tema-nombre { display: block; margin-top: 6px; text-align: center; font-size: .82rem; font-weight: 600; color: #475569; }
+  .aj-tema:hover .aj-tema-muestra { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .aj-tema input:checked + .aj-tema-muestra { border-color: #1e293b; box-shadow: 0 0 0 3px rgba(30,41,59,.15); }
+  .aj-tema input:checked ~ .aj-tema-nombre { color: #1e293b; }
+  .aj-tema input:focus-visible + .aj-tema-muestra { outline: 2px solid var(--color-burdeos-dark); outline-offset: 2px; }
+
+  /* ── Barra de guardado ── */
+  .aj-barra {
+    position: sticky; bottom: 16px; z-index: 40;
+    display: none; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 12px 18px;
+    background: #1e293b; color: #fff;
+    border-radius: 14px; box-shadow: var(--shadow-lg);
+  }
+  .aj-barra.visible { display: flex; animation: ajSube .25s ease; }
+  @keyframes ajSube { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .aj-barra-texto { font-size: .85rem; display: flex; align-items: center; gap: 8px; }
+  .aj-barra-acciones { display: flex; gap: 10px; }
+  .aj-btn {
+    padding: 9px 18px; border-radius: 10px; font-family: inherit;
+    font-size: .85rem; font-weight: 600; cursor: pointer; border: 1px solid transparent;
+    transition: var(--transition);
+  }
+  .aj-btn-sec { background: transparent; color: #e2e8f0; border-color: rgba(255,255,255,.3); }
+  .aj-btn-sec:hover { background: rgba(255,255,255,.1); }
+  .aj-btn-pri { background: var(--color-burdeos); color: #fff; }
+  .aj-btn-pri:hover { background: var(--color-burdeos-light); }
+  .aj-btn:focus-visible { outline: 2px solid var(--color-rosa); outline-offset: 2px; }
+
+  @media (max-width: 560px) {
+    .aj-barra { flex-direction: column; align-items: stretch; }
+    .aj-barra-acciones { justify-content: flex-end; }
+    .aj-fila-switch { flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aj-switch-track, .aj-switch-thumb, .aj-barra.visible { transition: none; animation: none; }
+  }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<!-- Pestañas superiores de navegación del módulo -->
+<div style="margin-bottom: 20px; border-bottom: 1px solid #cbd5e1; display: flex; gap: 20px;">
+  <a href="{% url 'configuracion:ajustes_globales' %}" style="padding: 10px 16px; font-weight: 600; color: #2E5C8A; border-bottom: 3px solid #2E5C8A; text-decoration: none;">
+    <i class="fas fa-sliders me-1"></i> Ajustes Globales
+  </a>
+  <a href="{% url 'configuracion:control_sesiones' %}" style="padding: 10px 16px; font-weight: 600; color: #64748b; text-decoration: none;">
+    <i class="fas fa-desktop me-1"></i> Control de Sesiones
+  </a>
+</div>
+
+<div class="aj-pagina">
+
+  {% if form.modo_mantenimiento.value %}
+  <div class="aj-banner" role="status">
+    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+    <div>
+      <strong>El sistema está en modo mantenimiento.</strong>
+      Solo los administradores pueden usarlo; el resto de usuarios es redirigido al inicio de sesión.
+    </div>
+  </div>
+  {% endif %}
+
+  <form method="post" id="form-ajustes" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alerta alerta-error" style="margin-bottom: 20px;">
+      <span class="alerta-icono">⚠</span>
+      <span>{{ form.non_field_errors }}</span>
+    </div>
+    {% endif %}
+
+    <!-- ═══ Seguridad ═══ -->
+    <section class="aj-card" aria-labelledby="t-seguridad">
+      <div class="aj-card-cab">
+        <div class="aj-card-icono"><i class="fas fa-shield-halved" aria-hidden="true"></i></div>
+        <div>
+          <h2 class="aj-card-titulo" id="t-seguridad">Seguridad y sesiones</h2>
+          <p class="aj-card-desc">Controla cuánto dura una sesión y cómo se protege el inicio de sesión.</p>
+        </div>
+      </div>
+      <div class="aj-card-cuerpo">
+        <div class="aj-grid">
+          {% for field in form %}
+          {% if field.name != "modo_mantenimiento" and field.name != "tema" %}
+          <div>
+            <label class="aj-label" for="{{ field.id_for_label }}">
+              {{ field.label }}{% if field.field.required %} *{% endif %}
+            </label>
+            <div class="aj-input-wrap">
+              {{ field }}
+              <span class="aj-unidad">{{ field.field.widget.attrs.data_unidad }}</span>
+            </div>
+            {% if field.name == "tiempo_sesion_minutos" %}
+            <p class="aj-hint-vivo" id="hint-sesion" aria-live="polite"></p>
+            {% endif %}
+            {% if field.help_text %}<p class="aj-ayuda">{{ field.help_text }}</p>{% endif %}
+            <p class="aj-rango">Entre {{ field.field.widget.attrs.min }} y {{ field.field.widget.attrs.max }}</p>
+            {% for error in field.errors %}
+            <p class="aj-err" role="alert"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Estado del sistema ═══ -->
+    <section class="aj-card" aria-labelledby="t-estado">
+      <div class="aj-card-cab">
+        <div class="aj-card-icono aviso"><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i></div>
+        <div>
+          <h2 class="aj-card-titulo" id="t-estado">Estado del sistema</h2>
+          <p class="aj-card-desc">Restringe el acceso mientras realizas tareas de mantenimiento.</p>
+        </div>
+      </div>
+      <div class="aj-card-cuerpo">
+        <div class="aj-fila-switch">
+          <div>
+            <p class="aj-mant-titulo">{{ form.modo_mantenimiento.label }}</p>
+            <p class="aj-ayuda">{{ form.modo_mantenimiento.help_text }}</p>
+          </div>
+          <label class="aj-switch" for="{{ form.modo_mantenimiento.id_for_label }}">
+            {{ form.modo_mantenimiento }}
+            <span class="aj-switch-track" aria-hidden="true"><span class="aj-switch-thumb"></span></span>
+            <span class="aj-switch-estado" id="estado-mant" aria-live="polite">
+              {% if form.modo_mantenimiento.value %}Activo{% else %}Inactivo{% endif %}
+            </span>
+          </label>
+        </div>
+        <div class="aj-aviso-activar" id="aviso-activar" role="note">
+          <i class="fas fa-circle-info me-1" aria-hidden="true"></i>
+          Al guardar, se cerrará la sesión de todos los usuarios que no sean administradores.
+        </div>
+        {% for error in form.modo_mantenimiento.errors %}
+        <p class="aj-err" role="alert"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ error }}</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- ═══ Apariencia ═══ -->
+    <section class="aj-card" aria-labelledby="t-apariencia">
+      <div class="aj-card-cab">
+        <div class="aj-card-icono"><i class="fas fa-palette" aria-hidden="true"></i></div>
+        <div>
+          <h2 class="aj-card-titulo" id="t-apariencia">Apariencia</h2>
+          <p class="aj-card-desc">Elige el color del sistema. Se aplica a todas las pantallas y a todos los usuarios.</p>
+        </div>
+      </div>
+      <div class="aj-card-cuerpo">
+        <div class="aj-temas" role="radiogroup" aria-label="Color del sistema">
+          {% for t in form.temas_info %}
+          <label class="aj-tema">
+            <input type="radio" name="tema" value="{{ t.valor }}"
+                   data-base="{{ t.base }}" data-oscuro="{{ t.oscuro }}" data-claro="{{ t.claro }}"
+                   data-fondo="{{ t.fondo }}" data-fondo-claro="{{ t.fondo_claro }}"
+                   {% if form.tema.value == t.valor %}checked{% endif %}>
+            <span class="aj-tema-muestra">
+              <span class="aj-tema-franja" style="background: {{ t.oscuro }};"></span>
+              <span class="aj-tema-franja" style="background: {{ t.base }};"></span>
+              <span class="aj-tema-franja" style="background: {{ t.fondo }};"></span>
+            </span>
+            <span class="aj-tema-nombre">{{ t.nombre }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="aj-ayuda">Al elegir un color ves una vista previa al instante; se guarda al pulsar «Guardar cambios».</p>
+        {% for error in form.tema.errors %}
+        <p class="aj-err" role="alert"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ error }}</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- ═══ Barra de guardado (aparece al haber cambios) ═══ -->
+    <div class="aj-barra{% if form.errors %} visible{% endif %}" id="barra-guardado" role="region" aria-label="Guardar cambios">
+      <span class="aj-barra-texto">
+        <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+        {% if form.errors %}Corrige los errores y guarda de nuevo.{% else %}Tienes cambios sin guardar.{% endif %}
+      </span>
+      <div class="aj-barra-acciones">
+        <button type="button" class="aj-btn aj-btn-sec" id="btn-descartar">Descartar</button>
+        <button type="submit" class="aj-btn aj-btn-pri">
+          <i class="fas fa-check me-1" aria-hidden="true"></i> Guardar cambios
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  "use strict";
+
+  var form = document.getElementById("form-ajustes");
+  if (!form) return;
+
+  var barra = document.getElementById("barra-guardado");
+  var btnDescartar = document.getElementById("btn-descartar");
+  var chkMant = document.getElementById("{{ form.modo_mantenimiento.id_for_label }}");
+  var estadoMant = document.getElementById("estado-mant");
+  var avisoActivar = document.getElementById("aviso-activar");
+  var inputSesion = document.getElementById("{{ form.tiempo_sesion_minutos.id_for_label }}");
+  var hintSesion = document.getElementById("hint-sesion");
+  var estabaActivo = chkMant ? chkMant.defaultChecked : false;
+  var hayErrores = {% if form.errors %}true{% else %}false{% endif %};
+
+  function campos() {
+    return Array.prototype.filter.call(form.elements, function (el) {
+      return el.name && el.name !== "csrfmiddlewaretoken";
+    });
+  }
+
+  function instantanea() {
+    return JSON.stringify(campos().map(function (el) {
+      return (el.type === "checkbox" || el.type === "radio") ? el.checked : el.value;
+    }));
+  }
+
+  var inicial = instantanea();
+
+  function textoDuracion(min) {
+    var n = parseInt(min, 10);
+    if (isNaN(n) || n <= 0) return "";
+    var h = Math.floor(n / 60), m = n % 60;
+    if (h && m) return "Equivale a " + h + " h " + m + " min";
+    if (h) return "Equivale a " + h + (h === 1 ? " hora" : " horas");
+    return "";
+  }
+
+  function refrescar() {
+    var cambio = instantanea() !== inicial;
+    barra.classList.toggle("visible", cambio || hayErrores);
+
+    if (chkMant) {
+      estadoMant.textContent = chkMant.checked ? "Activo" : "Inactivo";
+      avisoActivar.classList.toggle("visible", chkMant.checked && !estabaActivo);
+    }
+    if (inputSesion && hintSesion) {
+      hintSesion.textContent = textoDuracion(inputSesion.value);
+    }
+  }
+
+  form.addEventListener("input", refrescar);
+  form.addEventListener("change", refrescar);
+
+  // Vista previa del tema: cambia las variables CSS al instante (sin guardar).
+  function aplicarTema(radio) {
+    if (!radio) return;
+    var r = document.documentElement.style, d = radio.dataset;
+    r.setProperty("--color-burdeos", d.base);
+    r.setProperty("--color-burdeos-dark", d.oscuro);
+    r.setProperty("--color-burdeos-light", d.claro);
+    r.setProperty("--color-rosa", d.fondo);
+    r.setProperty("--color-rosa-light", d.fondoClaro);
+  }
+  form.querySelectorAll('input[name="tema"]').forEach(function (radio) {
+    radio.addEventListener("change", function () { aplicarTema(radio); });
+  });
+
+  btnDescartar.addEventListener("click", function () {
+    form.reset();
+    aplicarTema(form.querySelector('input[name="tema"]:checked'));
+    hayErrores = false;
+    refrescar();
+  });
+
+  // Confirmación antes de activar el modo mantenimiento.
+  form.addEventListener("submit", function (e) {
+    if (chkMant && chkMant.checked && !estabaActivo) {
+      var ok = window.confirm(
+        "Vas a activar el modo mantenimiento.\n\n" +
+        "Se cerrará la sesión de todos los usuarios que no sean administradores. ¿Continuar?"
+      );
+      if (!ok) e.preventDefault();
+    }
+  });
+
+  // Los campos con error se marcan visualmente.
+  {% for field in form %}{% if field.errors %}
+  (function () {
+    var el = document.getElementById("{{ field.id_for_label }}");
+    if (el) { el.classList.add("aj-error"); el.setAttribute("aria-invalid", "true"); }
+  })();
+  {% endif %}{% endfor %}
+
+  refrescar();
+})();
+</script>
+{% endblock %}

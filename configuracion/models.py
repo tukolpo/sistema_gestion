@@ -9,6 +9,8 @@ class ConfiguracionGlobal(models.Model):
     minutos_bloqueo_login = models.PositiveIntegerField(default=5)
     modo_mantenimiento = models.BooleanField(default=False)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
+    tema = models.CharField(max_length=20, default="azul")
+    
 
     class Meta:
         verbose_name = "Configuración Global"

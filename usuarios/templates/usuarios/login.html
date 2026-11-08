@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="{{ tema_activo }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="{% static 'usuarios/css/styles.css' %}">
+  <link rel="stylesheet" href="{% static 'usuarios/css/temas.css' %}">
+  {{ tema_css|safe }}
 <style>
   /* ═══════════════════════════════════════════════════════════
      Todo lo de aquí abajo reutiliza EXCLUSIVAMENTE los colores
@@ -27,7 +29,7 @@
   .login-card {
     max-width: 940px;
     min-height: 560px;
-    box-shadow: 0 30px 60px rgba(91,138,184,0.28), var(--shadow-lg);
+    box-shadow: 0 30px 60px color-mix(in srgb, var(--color-burdeos-dark) 28%, transparent), var(--shadow-lg);
     animation: loginEntrada 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -42,7 +44,7 @@
     justify-content: center;
     padding: 44px 40px 40px;
     overflow: hidden;
-    background: linear-gradient(155deg, var(--color-burdeos-dark) 0%, #4c7aa3 100%);
+    background: linear-gradient(155deg, var(--color-burdeos-dark) 0%, color-mix(in srgb, var(--color-burdeos-dark) 80%, #000) 100%);
   }
 
   .login-panel-izquierdo::before {
@@ -243,12 +245,32 @@
 
   .login-pie svg { width: 13px; height: 13px; color: var(--color-exito); }
 
+  /* ── Alerta de error: tarjeta con borde rojo ── */
+  .login-alerta.alerta {
+    align-items: center; gap: 14px;
+    padding: 14px 16px; margin-bottom: 18px;
+    background: #fff; color: var(--color-texto);
+    border: 1px solid #fecaca; border-left: 5px solid var(--color-error);
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(198, 40, 40, .12);
+    animation: shake .35s ease;
+  }
+  .login-alerta-icono {
+    width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #FFEBEE; color: var(--color-error); font-size: .95rem;
+  }
+  .login-alerta-titulo { margin: 0; font-size: .9rem; font-weight: 700; color: #991b1b; }
+  .login-alerta-detalle { margin: 2px 0 0; font-size: .8rem; color: var(--color-texto-suave); }
+
   @media (prefers-reduced-motion: reduce) {
-    .login-card, .credencial { animation: none; }
+    .login-card, .credencial, .login-alerta.alerta { animation: none; }
   }
 </style>
 </head>
-<body>
+<body data-efectos-tema>
+
+{% include "usuarios/_aviso_mantenimiento.html" %}
 
 <div class="login-page">
   <div class="login-card" role="main">
@@ -321,7 +343,7 @@
       {% if messages %}
       <div class="alertas-container" role="alert" aria-live="polite">
         {% for message in messages %}
-        <div class="alerta alerta-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}exito{% else %}info{% endif %}">
+        <div class="alerta alerta-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}exito{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
           <span class="alerta-icono">
             {% if message.tags == 'error' %}⚠{% elif message.tags == 'success' %}✓{% else %}ℹ{% endif %}
           </span>
@@ -332,16 +354,19 @@
       </div>
       {% endif %}
 
-      <!-- Errores no field del formulario Django (Subtarea 1.3) -->
-      {% if form.non_field_errors %}
-      <div class="alertas-container" role="alert" aria-live="polite">
-        {% for error in form.non_field_errors %}
-        <div class="alerta alerta-error">
-          <span class="alerta-icono">⚠</span>
-          <span>{{ error }}</span>
-          <button class="alerta-cerrar" type="button" aria-label="Cerrar">×</button>
+      <!-- Alerta de credenciales incorrectas -->
+      {% if form.errors %}
+      <div class="alerta login-alerta" role="alert" aria-live="assertive">
+        <div class="login-alerta-icono" aria-hidden="true">
+          <i class="fas fa-triangle-exclamation">⚠</i>
         </div>
-        {% endfor %}
+        <div>
+          <p class="login-alerta-titulo">No se pudo iniciar sesión</p>
+          <p class="login-alerta-detalle">
+            {% if form.non_field_errors %}{{ form.non_field_errors.0 }}{% else %}Revisa los campos marcados e inténtalo de nuevo.{% endif %}
+          </p>
+        </div>
+        <button class="alerta-cerrar" type="button" aria-label="Cerrar">×</button>
       </div>
       {% endif %}
 
@@ -425,5 +450,6 @@
 <!-- /login-page -->
 
 <script src="{% static 'usuarios/js/validaciones.js' %}"></script>
+<script src="{% static 'usuarios/js/efectos-tema.js' %}"></script>
 </body>
 </html>

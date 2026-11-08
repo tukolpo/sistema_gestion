@@ -21,6 +21,13 @@ MENSAJE_CUENTA_BLOQUEADA = (
     "Cuenta bloqueada debido a varios intentos fallidos. Inténtelo más tarde"
 )
 MENSAJE_ACCESO_DENEGADO = "Acceso denegado."
+MENSAJE_SESION_REEMPLAZADA = (
+    "Su sesión se cerró porque se inició sesión en otro dispositivo o navegador."
+)
+MENSAJE_MANTENIMIENTO = (
+    "El sistema se encuentra en mantenimiento temporal. "
+    "Solo los administradores pueden acceder."
+)
 
 ROLES_INICIALES = [
     {

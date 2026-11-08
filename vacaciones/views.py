@@ -3,6 +3,7 @@ import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from usuarios.decorators import requiere_jerarquia
@@ -23,6 +24,18 @@ def _trabajador_del_usuario(usuario):
     return Trabajador.objects.filter(email__iexact=correo).first()
 
 
+def _tab_activa(request, es_supervisor, form_invalido=False):
+    permitidas = {"solicitar", "solicitudes"}
+    if es_supervisor:
+        permitidas.add("dias")
+    tab = (request.POST.get("tab") or request.GET.get("tab") or "").strip()
+    if form_invalido:
+        return "solicitar"
+    if tab in permitidas:
+        return tab
+    return "dias" if es_supervisor else "solicitar"
+
+
 @login_required
 def crear_solicitud(request):
     es_supervisor = request.user.tiene_rango_minimo(NIVEL_SUPERVISOR)
@@ -37,7 +50,7 @@ def crear_solicitud(request):
                 request,
                 "Tu cuenta no está vinculada a ningún trabajador; no puedes solicitar vacaciones.",
             )
-            return redirect("vacaciones:gestion_vacaciones")
+            return redirect(reverse("vacaciones:gestion_vacaciones") + "?tab=solicitar")
         datos = request.POST.copy()
         if trabajador_propio:
             datos["trabajador"] = trabajador_propio.pk
@@ -49,7 +62,7 @@ def crear_solicitud(request):
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Solicitud de vacaciones enviada correctamente.")
-        return redirect("vacaciones:gestion_vacaciones")
+        return redirect(reverse("vacaciones:gestion_vacaciones") + "?tab=solicitudes")
 
     if es_supervisor:
         trabajadores_con_dias = [
@@ -60,6 +73,9 @@ def crear_solicitud(request):
             item["trabajador"].id: item["dias_disponibles"]
             for item in trabajadores_con_dias
         }
+        solicitudes = SolicitudVacaciones.objects.select_related("trabajador").order_by(
+            "-fecha_creacion"
+        )
     else:
         trabajadores_con_dias = []
         dias_por_trabajador = {}
@@ -67,6 +83,14 @@ def crear_solicitud(request):
             dias_por_trabajador = {
                 trabajador_propio.id: calcular_dias_disponibles(trabajador_propio)["dias_disponibles"]
             }
+            solicitudes = SolicitudVacaciones.objects.filter(
+                trabajador=trabajador_propio
+            ).order_by("-fecha_creacion")
+        else:
+            solicitudes = SolicitudVacaciones.objects.none()
+
+    Estado = SolicitudVacaciones.Estado
+    form_invalido = request.method == "POST" and not form.is_valid()
 
     return render(request, "vacaciones/gestion_vacaciones.html", {
         "form": form,
@@ -75,6 +99,12 @@ def crear_solicitud(request):
         "es_supervisor": es_supervisor,
         "trabajador_propio": trabajador_propio,
         "sin_trabajador": sin_trabajador,
+        "solicitudes": solicitudes,
+        "total_pendientes": solicitudes.filter(estado=Estado.PENDIENTE).count(),
+        "total_aprobadas": solicitudes.filter(estado=Estado.APROBADA).count(),
+        "total_rechazadas": solicitudes.filter(estado=Estado.RECHAZADA).count(),
+        "seccion_activa": "vacaciones",
+        "tab_activa": _tab_activa(request, es_supervisor, form_invalido=form_invalido),
     })
 
 
@@ -87,20 +117,7 @@ def gestion_vacaciones(request):
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_SUPERVISOR)
 def lista_solicitudes(request):
-    solicitudes = SolicitudVacaciones.objects.select_related("trabajador").order_by("-fecha_creacion")
-
-    Estado = SolicitudVacaciones.Estado
-    # Conteos para el resumen de la parte de arriba de la pantalla
-    total_pendientes = solicitudes.filter(estado=Estado.PENDIENTE).count()
-    total_aprobadas = solicitudes.filter(estado=Estado.APROBADA).count()
-    total_rechazadas = solicitudes.filter(estado=Estado.RECHAZADA).count()
-
-    return render(request, "vacaciones/lista_solicitudes.html", {
-        "solicitudes": solicitudes,
-        "total_pendientes": total_pendientes,
-        "total_aprobadas": total_aprobadas,
-        "total_rechazadas": total_rechazadas,
-    })
+    return redirect(reverse("vacaciones:gestion_vacaciones") + "?tab=solicitudes")
 
 
 @login_required
@@ -110,6 +127,7 @@ def cambiar_estado_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudVacaciones, id=solicitud_id)
     nuevo_estado = request.POST.get("estado")
     Estado = SolicitudVacaciones.Estado
+    destino = reverse("vacaciones:gestion_vacaciones") + "?tab=solicitudes"
 
     if nuevo_estado not in (Estado.APROBADA, Estado.RECHAZADA):
         messages.error(request, "Estado no válido.")
@@ -135,4 +153,4 @@ def cambiar_estado_solicitud(request, solicitud_id):
         solicitud.save(update_fields=["estado"])
         messages.success(request, f"Solicitud de {solicitud.trabajador} rechazada.")
 
-    return redirect("vacaciones:lista_solicitudes")
+    return redirect(destino)

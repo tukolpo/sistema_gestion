@@ -30,6 +30,7 @@ class Usuario(AbstractUser):
     departamento = models.CharField(max_length=100, blank=True, null=True)
     intentos_fallidos_login = models.PositiveSmallIntegerField(default=0)
     bloqueado_hasta = models.DateTimeField(null=True, blank=True, db_index=True)
+    sesion_clave_activa = models.CharField(max_length=40, blank=True, default="")
 
     def esta_bloqueado(self):
         if self.bloqueado_hasta is None:

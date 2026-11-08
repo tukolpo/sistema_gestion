@@ -1,0 +1,62 @@
+{% if en_mantenimiento %}
+<style>
+  .aviso-mant {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    height: 40px; overflow: hidden;
+    display: flex; align-items: center;
+    background: linear-gradient(90deg, #E65100, #F57C00);
+    color: #fff; font-size: .85rem; font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .aviso-mant-pista {
+    display: flex; flex-shrink: 0; width: max-content;
+    animation: avisoMantDesplazar 32s linear infinite;
+  }
+  .aviso-mant:hover .aviso-mant-pista { animation-play-state: paused; }
+  .aviso-mant-grupo { display: flex; flex-shrink: 0; }
+  .aviso-mant-item { display: inline-flex; align-items: center; gap: 10px; padding: 0 36px; white-space: nowrap; }
+  .aviso-mant-item::after { content: "•"; margin-left: 36px; opacity: .6; }
+
+  @keyframes avisoMantDesplazar {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  body:has(.aviso-mant) { padding-top: 40px; }
+  body:has(.aviso-mant) .login-page { min-height: calc(100vh - 40px); }
+  body:has(.aviso-mant) .layout-app { min-height: calc(100vh - 40px); }
+  body:has(.aviso-mant) .contenido-principal { min-height: calc(100vh - 40px); }
+  body:has(.aviso-mant) .topbar { top: 40px; }
+  body:has(.aviso-mant) .sidebar { top: 40px; height: calc(100vh - 40px); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .aviso-mant { justify-content: center; }
+    .aviso-mant-pista { animation: none; }
+    .aviso-mant-grupo[aria-hidden="true"] { display: none; }
+    .aviso-mant-item:not(:first-child),
+    .aviso-mant-item::after { display: none; }
+    .aviso-mant-item { white-space: normal; text-align: center; padding: 0 12px; }
+  }
+</style>
+
+<div class="aviso-mant" role="status" aria-live="polite">
+  <div class="aviso-mant-pista">
+    {% for g in "ab" %}
+    <div class="aviso-mant-grupo"{% if forloop.last %} aria-hidden="true"{% endif %}>
+      {% for i in "1234" %}
+      <span class="aviso-mant-item"><span aria-hidden="true">⚠</span> {{ mensaje_mantenimiento }}</span>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var texto = "{{ mensaje_mantenimiento|escapejs }}";
+    document.querySelectorAll(".alertas-container .alerta").forEach(function (a) {
+      if (a.textContent.indexOf(texto) !== -1) a.remove();
+    });
+  });
+</script>
+{% endif %}

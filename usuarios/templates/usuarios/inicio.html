@@ -4,6 +4,30 @@
 
 {% block topbar_titulo %}{{ titulo }}{% endblock %}
 
+{% block extra_css %}
+<style>
+  .dona-contenedor { position: relative; height: 260px; max-width: 320px; margin: 0 auto; }
+  .dona-centro {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .dona-centro-numero { font-size: 2.4rem; font-weight: 700; line-height: 1; color: #1e293b; }
+  .dona-centro-texto {
+    margin-top: 4px; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--color-texto-suave);
+  }
+  .dona-leyenda {
+    display: flex; justify-content: center; gap: 20px;
+    list-style: none; margin: 14px 0 0; padding: 0; font-size: .85rem;
+  }
+  .dona-leyenda span {
+    display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 6px;
+  }
+</style>
+{% endblock %}
+
 {% block contenido %}
 
 <p style="margin-bottom:20px;">Hola, <strong>{{ user.first_name|default:user.username }}</strong>.
@@ -76,7 +100,19 @@
 
   <div class="tabla-card" style="padding:20px;">
     <h3 style="margin-top:0;"><i class="fas fa-chart-pie me-1 text-primary"></i> Estado del Personal</h3>
-    <canvas id="graficoEstadoPersonal" height="180"></canvas>
+
+    <div class="dona-contenedor">
+      <canvas id="graficoEstadoPersonal" aria-label="Gráfico de estado del personal" role="img"></canvas>
+      <div class="dona-centro" aria-hidden="true">
+        <span class="dona-centro-numero">{{ total_trabajadores }}</span>
+        <span class="dona-centro-texto">Personal total</span>
+      </div>
+    </div>
+
+    <ul class="dona-leyenda">
+      <li><span style="background:#2b6b3a"></span>Activos <strong>{{ activos }}</strong></li>
+      <li><span style="background:#8b1a2b"></span>Inactivos <strong>{{ inactivos }}</strong></li>
+    </ul>
   </div>
 
 </div>
@@ -161,8 +197,9 @@
         }]
       },
       options: {
-        plugins: { legend: { position: 'bottom' } },
-        maintainAspectRatio: true,
+        cutout: '68%',
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
       }
     });
   }

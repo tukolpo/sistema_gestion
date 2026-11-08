@@ -30,6 +30,7 @@ def gestion_guardias(request):
             "sin_trabajador": trabajador_propio is None,
             "anio_actual": hoy.year,
             "mes_actual": hoy.month,
+            "seccion_activa": "guardias",
         }
         return render(request, "guardias/mis_guardias.html", context)
 
@@ -42,5 +43,6 @@ def gestion_guardias(request):
         "api_reporte_url": "/api/guardias/reporte/",
         "turnos": turnos,
         "turnos_json": json.dumps(turnos),
+        "seccion_activa": "guardias",
     }
     return render(request, "guardias/gestion_guardias.html", context)

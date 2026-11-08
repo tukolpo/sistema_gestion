@@ -6,6 +6,7 @@ from datetime import datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.http import (
     FileResponse,
@@ -32,9 +33,10 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from usuarios.constants import NIVEL_GESTION_USUARIOS
+from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
 
+from .antiguedad import texto_antiguedad
 from .forms import DocumentoTrabajadorForm, TrabajadorForm
 from .models import Cargo, DocumentoTrabajador, Trabajador
 from .utils import cambiar_estado_trabajador, trabajador_del_usuario
@@ -218,6 +220,51 @@ def cambiar_estado(request, trabajador_id):
 
 
 @login_required
+@requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
+def eliminar_trabajador(request, trabajador_id):
+    """Elimina un trabajador. Solo administradores y pidiendo su contraseña.
+
+    La auditoría (acción ELIMINAR) la registra la señal post_delete.
+    Ojo: guardias, vacaciones y permisos están en CASCADE, así que se borran
+    junto con el trabajador.
+    """
+    if request.method != "POST":
+        return redirect("trabajadores:lista")
+
+    trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
+
+    password = request.POST.get("password_admin", "")
+    if not password or not request.user.check_password(password):
+        messages.error(
+            request, "Contraseña incorrecta. No se eliminó al trabajador."
+        )
+        return redirect("trabajadores:lista")
+
+    propio = trabajador_del_usuario(request.user)
+    if propio and propio.pk == trabajador.pk:
+        messages.error(request, "No puedes eliminar tu propia ficha de trabajador.")
+        return redirect("trabajadores:lista")
+
+    nombre = str(trabajador)
+    foto = trabajador.foto
+    archivos = [d.archivo for d in trabajador.documentos.all()]
+
+    with transaction.atomic():
+        trabajador.delete()
+
+    # Ya eliminado de la base de datos: se limpian los archivos privados.
+    for archivo in archivos + [foto]:
+        if archivo:
+            try:
+                archivo.delete(save=False)
+            except Exception:
+                pass
+
+    messages.success(request, f"Trabajador {nombre} eliminado correctamente.")
+    return redirect("trabajadores:lista")
+
+
+@login_required
 def servir_foto(request, trabajador_id):
     """Sirve la foto solo a usuarios autorizados (3.4): supervisores/admins,
     o el propio trabajador viendo su propia foto."""
@@ -307,13 +354,7 @@ def _puede_exportar(user):
 
 
 def _antiguedad_texto(fecha_ingreso):
-    if not fecha_ingreso:
-        return "—"
-    delta = datetime.today().date() - fecha_ingreso
-    años, meses = delta.days // 365, (delta.days % 365) // 30
-    if años == 0: return f"{meses} mes(es)"
-    if meses == 0: return f"{años} año(s)"
-    return f"{años} año(s) y {meses} mes(es)"
+    return texto_antiguedad(fecha_ingreso)
 
 
 def _qs_a_registros(qs):

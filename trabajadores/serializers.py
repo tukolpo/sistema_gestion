@@ -4,6 +4,7 @@
 from django.utils import timezone
 from rest_framework import serializers
 
+from trabajadores.antiguedad import MAYORIA_DE_EDAD, es_mayor_de_edad, texto_antiguedad
 from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
 from trabajadores.validators import (
     normalizar_cedula,
@@ -118,6 +119,13 @@ class TrabajadorSerializer(serializers.ModelSerializer):
 
         return valor
 
+    def validate_fecha_nacimiento(self, fecha):
+        if fecha and not es_mayor_de_edad(fecha):
+            raise serializers.ValidationError(
+                f"El trabajador debe ser mayor de {MAYORIA_DE_EDAD} años."
+            )
+        return fecha
+
     def validate_foto(self, foto):
         validar_archivo_foto(foto)
         return foto
@@ -132,6 +140,7 @@ class TrabajadorListSerializer(serializers.ModelSerializer):
     cargo_nombre = serializers.CharField(source="cargo.nombre", read_only=True)
     esta_activo = serializers.BooleanField(read_only=True)
     antiguedad = serializers.SerializerMethodField()
+    antiguedad_texto = serializers.SerializerMethodField()
     estado_display = serializers.CharField(source="get_estado_display", read_only=True)
 
     class Meta:
@@ -149,10 +158,14 @@ class TrabajadorListSerializer(serializers.ModelSerializer):
             "esta_activo",
             "fecha_ingreso",
             "antiguedad",
+            "antiguedad_texto",
         )
 
     def get_antiguedad(self, obj):
         return calcular_antiguedad(obj.fecha_ingreso)
+
+    def get_antiguedad_texto(self, obj):
+        return texto_antiguedad(obj.fecha_ingreso)
 
 
 class TrabajadorEstadoSerializer(serializers.Serializer):

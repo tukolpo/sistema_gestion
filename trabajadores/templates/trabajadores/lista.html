@@ -164,7 +164,7 @@
   }
   #contenedor-tabla-trabajadores .tabla-header-row,
   #contenedor-tabla-trabajadores .tabla-fila {
-    grid-template-columns: 2fr 1.2fr 1.5fr 1fr 1fr 1.8fr;
+    grid-template-columns: 1.9fr 1.1fr 1.3fr 1.8fr 1fr 2.4fr;
   }
   #contenedor-tabla-trabajadores .tabla-fila {
     transition: background 0.12s ease;
@@ -199,6 +199,29 @@
   .btn-fila-editar { background: #4a90e2; color: #ffffff; }
   .btn-fila-activar { background: #2b6b3a; color: #ffffff; }
   .btn-fila-desactivar { background: #8b1a2b; color: #ffffff; }
+  .btn-fila-eliminar { background: #ffffff; color: #b91c1c; border: 1.5px solid #fca5a5; }
+  .btn-fila-eliminar:hover { background: #fef2f2; }
+
+  /* ── Ventana de confirmación para eliminar ── */
+  .modal-eliminar { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .modal-eliminar[hidden] { display: none; }
+  .modal-fondo { position: absolute; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(3px); }
+  .modal-caja { position: relative; width: min(440px, 100%); background: #fff; border-radius: 16px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  .modal-caja h3 { margin: 0 0 6px; font-size: 1.15rem; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+  .modal-caja h3 i { color: #b91c1c; }
+  .modal-persona { margin: 12px 0; padding: 10px 14px; background: #f8fafc; border: 1px solid #e3e8ef; border-radius: 10px; font-size: .9rem; }
+  .modal-persona strong { display: block; color: #0f172a; }
+  .modal-persona span { color: #64748b; font-size: .82rem; }
+  .modal-aviso { margin: 0 0 14px; padding: 10px 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: .82rem; line-height: 1.45; }
+  .modal-caja label { display: block; margin-bottom: 6px; font-size: .8rem; font-weight: 600; color: #334155; }
+  .modal-caja input[type="password"] { width: 100%; padding: 11px 14px; border: 1.5px solid #d5dbe5; border-radius: 10px; font-size: .92rem; }
+  .modal-caja input[type="password"]:focus { outline: none; border-color: #dc2626; box-shadow: 0 0 0 3px rgba(220,38,38,.18); }
+  .modal-botones { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .modal-botones button { padding: 10px 20px; border-radius: 10px; font-size: .88rem; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; }
+  .modal-cancelar { background: #fff; color: #475569; border-color: #d5dbe5 !important; }
+  .modal-confirmar { background: #b91c1c; color: #fff; }
+  .modal-confirmar:hover { background: #991b1b; }
+  .modal-confirmar:disabled { opacity: .6; cursor: wait; }
 </style>
 {% endblock %}
 
@@ -254,12 +277,39 @@
 
 </div>
 
+{% if es_administrador %}
+<div class="modal-eliminar" id="modal-eliminar" hidden role="dialog" aria-modal="true" aria-labelledby="eliminar-titulo">
+  <div class="modal-fondo" data-cerrar></div>
+  <form class="modal-caja" id="form-eliminar" method="post" autocomplete="off">
+    {% csrf_token %}
+    <h3 id="eliminar-titulo"><i class="fas fa-triangle-exclamation" aria-hidden="true"></i> Eliminar trabajador</h3>
+    <div class="modal-persona">
+      <strong id="eliminar-nombre"></strong>
+      <span>Cédula: <span id="eliminar-cedula"></span></span>
+    </div>
+    <p class="modal-aviso">
+      Esta acción <b>no se puede deshacer</b>. También se eliminarán sus guardias,
+      vacaciones, permisos y documentos. Si solo quieres que deje de trabajar,
+      usa <b>Desactivar</b>.
+    </p>
+    <label for="eliminar-password">Para confirmar, escribe tu contraseña de administrador</label>
+    <input type="password" id="eliminar-password" name="password_admin" required autocomplete="current-password">
+    <div class="modal-botones">
+      <button type="button" class="modal-cancelar" data-cerrar>Cancelar</button>
+      <button type="submit" class="modal-confirmar"><i class="fas fa-trash me-1" aria-hidden="true"></i> Eliminar definitivamente</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
 <script>
   window.TRABAJADORES_URLS = {
     api: "/api/trabajadores/",
     detalle: "{% url 'trabajadores:detalle' 0 %}".replace("/0/", "/{id}/"),
     editar: "{% url 'trabajadores:editar' 0 %}".replace("/0/", "/{id}/"),
     estado: "{% url 'trabajadores:estado' 0 %}".replace("/0/", "/{id}/"),
+    eliminar: "{% if es_administrador %}{% url 'trabajadores:eliminar' 0 %}{% endif %}".replace("/0/", "/{id}/"),
+    puede_eliminar: {% if es_administrador %}true{% else %}false{% endif %},
     csrf: "{{ csrf_token }}",
   };
 </script>

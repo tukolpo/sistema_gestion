@@ -59,6 +59,10 @@
     return window.TRABAJADORES_URLS.estado.replace("{id}", id);
   }
 
+  function urlEliminar(id) {
+    return window.TRABAJADORES_URLS.eliminar.replace("{id}", id);
+  }
+
   function escaparHtml(texto) {
     var div = document.createElement("div");
     div.textContent = texto == null ? "" : String(texto);
@@ -72,10 +76,19 @@
     var btnAccionClase = trabajador.esta_activo ? "btn-fila btn-fila-desactivar" : "btn-fila btn-fila-activar";
     var btnAccionIcono = trabajador.esta_activo ? "fa-user-slash" : "fa-user-check";
     var btnTexto = trabajador.esta_activo ? "Desactivar" : "Activar";
-    var antiguedad =
-      trabajador.antiguedad != null
-        ? escaparHtml(trabajador.antiguedad) + " año(s)"
-        : "—";
+    var antiguedad = escaparHtml(
+      trabajador.antiguedad_texto ||
+        (trabajador.antiguedad != null ? trabajador.antiguedad + " año(s)" : "—")
+    );
+    var btnEliminar = window.TRABAJADORES_URLS.puede_eliminar
+      ? '<button type="button" class="btn-fila btn-fila-eliminar" data-id="' +
+        trabajador.id +
+        '" data-nombre="' +
+        nombreCompleto +
+        '" data-cedula="' +
+        escaparHtml(trabajador.cedula) +
+        '"><i class="fas fa-trash"></i> Eliminar</button>'
+      : "";
 
     return (
       '<div class="tabla-fila" role="row" data-trabajador-id="' +
@@ -126,6 +139,7 @@
       btnTexto +
       "</button>" +
       "</form>" +
+      btnEliminar +
       "</div>" +
       "</div>"
     );
@@ -229,6 +243,50 @@
     buscarTrabajadores(els);
   }
 
+  function inicializarModalEliminar(els) {
+    var modal = document.getElementById("modal-eliminar");
+    if (!modal || !window.TRABAJADORES_URLS.puede_eliminar) return;
+
+    var form = document.getElementById("form-eliminar");
+    var nombre = document.getElementById("eliminar-nombre");
+    var cedula = document.getElementById("eliminar-cedula");
+    var password = document.getElementById("eliminar-password");
+    var ultimoBoton = null;
+
+    function abrir(btn) {
+      ultimoBoton = btn;
+      form.action = urlEliminar(btn.dataset.id);
+      nombre.innerHTML = btn.dataset.nombre;
+      cedula.textContent = btn.dataset.cedula;
+      password.value = "";
+      modal.hidden = false;
+      document.body.classList.add("menu-abierto");
+      password.focus();
+    }
+
+    function cerrar() {
+      modal.hidden = true;
+      document.body.classList.remove("menu-abierto");
+      password.value = "";
+      if (ultimoBoton) ultimoBoton.focus();
+    }
+
+    els.tbody.addEventListener("click", function (ev) {
+      var btn = ev.target.closest(".btn-fila-eliminar");
+      if (btn) abrir(btn);
+    });
+    modal.querySelectorAll("[data-cerrar]").forEach(function (el) {
+      el.addEventListener("click", cerrar);
+    });
+    document.addEventListener("keydown", function (ev) {
+      if (ev.key === "Escape" && !modal.hidden) cerrar();
+    });
+    form.addEventListener("submit", function () {
+      var enviar = form.querySelector("button[type=submit]");
+      if (enviar) enviar.disabled = true;
+    });
+  }
+
   function inicializarFiltroTrabajadores() {
     var els = obtenerElementos();
     if (!els.form || !els.tbody || !window.TRABAJADORES_URLS) {
@@ -260,6 +318,7 @@
       });
     }
 
+    inicializarModalEliminar(els);
     buscarTrabajadores(els);
   }
 

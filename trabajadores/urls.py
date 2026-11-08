@@ -9,6 +9,7 @@ urlpatterns = [
     path("<int:trabajador_id>/", views.detalle_trabajador, name="detalle"),
     path("<int:trabajador_id>/editar/", views.editar_trabajador, name="editar"),
     path("<int:trabajador_id>/estado/", views.cambiar_estado, name="estado"),
+    path("<int:trabajador_id>/eliminar/", views.eliminar_trabajador, name="eliminar"),
     path("<int:trabajador_id>/foto/", views.servir_foto, name="foto"),
     path(
         "documentos/<int:documento_id>/ver/",
@@ -20,9 +21,7 @@ urlpatterns = [
         views.descargar_documento,
         name="descargar_documento",
     ),
-    path("perfil-publico/<uuid:trabajador_uuid>/", views.perfil_publico_trabajador, name="perfil_publico_trabajador"),
     path("exportar/excel/", views.exportar_excel, name="exportar_excel"),
     path("exportar/csv/", views.exportar_csv, name="exportar_csv"),
     path("exportar/pdf/", views.exportar_pdf, name="exportar_pdf"),
 ]
-

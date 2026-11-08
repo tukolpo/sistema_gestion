@@ -1,5 +1,8 @@
+from datetime import date
+
 from django import forms
 
+from trabajadores.antiguedad import MAYORIA_DE_EDAD, es_mayor_de_edad, fecha_limite_mayoria
 from trabajadores.models import DocumentoTrabajador, Trabajador
 from trabajadores.validators import (
     normalizar_cedula,
@@ -50,6 +53,31 @@ class TrabajadorForm(forms.ModelForm):
             ),
             "foto": forms.FileInput(attrs={"class": "form-input"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # La fecha de ingreso es obligatoria al registrar o editar un trabajador.
+        self.fields["fecha_ingreso"].required = True
+        self.fields["fecha_ingreso"].error_messages["required"] = (
+            "La fecha de ingreso es obligatoria."
+        )
+        self.fields["fecha_ingreso"].widget.attrs["max"] = date.today().isoformat()
+        # Solo mayores de edad: el selector no deja elegir fechas posteriores.
+        self.fields["fecha_nacimiento"].widget.attrs["max"] = fecha_limite_mayoria().isoformat()
+
+    def clean_fecha_nacimiento(self):
+        fecha = self.cleaned_data.get("fecha_nacimiento")
+        if fecha and not es_mayor_de_edad(fecha):
+            raise forms.ValidationError(
+                f"El trabajador debe ser mayor de {MAYORIA_DE_EDAD} años."
+            )
+        return fecha
+
+    def clean_fecha_ingreso(self):
+        fecha = self.cleaned_data.get("fecha_ingreso")
+        if fecha and fecha > date.today():
+            raise forms.ValidationError("La fecha de ingreso no puede ser futura.")
+        return fecha
 
     def clean_cedula(self):
         valor = normalizar_cedula(self.cleaned_data.get("cedula"))

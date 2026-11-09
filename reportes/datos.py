@@ -10,7 +10,7 @@ from vacaciones.models import SolicitudVacaciones
 
 COLUMNAS_TRABAJADORES = [
     "id", "cedula", "nombre_completo", "cargo", "especialidad",
-    "estado", "fecha_ingreso", "antiguedad_anios",
+    "departamento", "estado", "fecha_ingreso", "antiguedad_anios",
 ]
 
 COLUMNAS_GUARDIAS = [
@@ -68,7 +68,7 @@ def limpiar_trabajadores(df):
     ).str.strip().str.title()
     df = df.drop(columns=["nombre", "apellido"])
 
-    for col in ["cedula", "cargo", "especialidad", "estado"]:
+    for col in ["cedula", "cargo", "especialidad", "departamento", "estado"]:
         df[col] = df[col].fillna("—").astype(str).str.strip()
         df.loc[df[col] == "", col] = "—"
 
@@ -93,12 +93,12 @@ def obtener_trabajadores_df(filtros=None):
 
     filas = list(
         qs.values(
-            "id", "cedula", "nombre", "apellido", "estado",
+            "id", "cedula", "nombre", "apellido", "estado", "departamento",
             "fecha_ingreso", "cargo__nombre", "especialidad__nombre",
         )
     )
     columnas_crudas = [
-        "id", "cedula", "nombre", "apellido", "estado",
+        "id", "cedula", "nombre", "apellido", "estado", "departamento",
         "fecha_ingreso", "cargo", "especialidad",
     ]
     df = pd.DataFrame(filas)

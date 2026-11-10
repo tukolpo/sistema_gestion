@@ -21,8 +21,6 @@ class TrabajadorForm(forms.ModelForm):
             "cedula",
             "fecha_nacimiento",
             "fecha_ingreso",
-            "cargo",
-            "especialidad",
             "estado",
             "telefono",
             "email",
@@ -39,8 +37,6 @@ class TrabajadorForm(forms.ModelForm):
                     "maxlength": "10",
                 }
             ),
-            "cargo": forms.Select(attrs={"class": "form-input"}),
-            "especialidad": forms.Select(attrs={"class": "form-input"}),
             "estado": forms.Select(attrs={"class": "form-input"}),
             "telefono": forms.TextInput(attrs={"class": "form-input"}),
             "email": forms.EmailInput(attrs={"class": "form-input"}),
@@ -56,6 +52,19 @@ class TrabajadorForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Obligatorios al registrar o editar un trabajador.
+        self.fields["fecha_nacimiento"].required = True
+        self.fields["fecha_nacimiento"].error_messages["required"] = (
+            "La fecha de nacimiento es obligatoria."
+        )
+        self.fields["telefono"].required = True
+        self.fields["telefono"].error_messages["required"] = (
+            "El teléfono es obligatorio."
+        )
+        self.fields["email"].required = True
+        self.fields["email"].error_messages["required"] = (
+            "El correo electrónico es obligatorio."
+        )
         # La fecha de ingreso es obligatoria al registrar o editar un trabajador.
         self.fields["fecha_ingreso"].required = True
         self.fields["fecha_ingreso"].error_messages["required"] = (
@@ -72,6 +81,18 @@ class TrabajadorForm(forms.ModelForm):
                 f"El trabajador debe ser mayor de {MAYORIA_DE_EDAD} años."
             )
         return fecha
+
+    def clean_telefono(self):
+        telefono = (self.cleaned_data.get("telefono") or "").strip()
+        if not telefono:
+            raise forms.ValidationError("El teléfono es obligatorio.")
+        return telefono
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip().lower()
+        if not email:
+            raise forms.ValidationError("El correo electrónico es obligatorio.")
+        return email
 
     def clean_fecha_ingreso(self):
         fecha = self.cleaned_data.get("fecha_ingreso")

@@ -79,24 +79,7 @@
 
 </div>
 
-<div style="display:grid; grid-template-columns: 1.3fr 1fr; gap:20px;">
-
-  <div class="tabla-card" style="padding:20px;">
-    <h3 style="margin-top:0;"><i class="fas fa-briefcase me-1 text-primary"></i> Distribución por Cargo</h3>
-    {% for item in personal_por_cargo %}
-    <div style="margin-bottom:12px;">
-      <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:4px;">
-        <span>{{ item.cargo__nombre|default:"Sin cargo" }}</span>
-        <strong>{{ item.total }}</strong>
-      </div>
-      <div style="background:#eef2f7; border-radius:6px; height:10px; overflow:hidden;">
-        <div style="background:linear-gradient(90deg,#4a90e2,#2E5C8A); height:100%; width:{% widthratio item.total total_trabajadores 100 %}%;"></div>
-      </div>
-    </div>
-    {% empty %}
-    <p style="color:var(--color-texto-suave); font-size:0.85rem;">Sin datos disponibles.</p>
-    {% endfor %}
-  </div>
+<div style="display:grid; grid-template-columns: minmax(0, 520px); justify-content:center; gap:20px;">
 
   <div class="tabla-card" style="padding:20px;">
     <h3 style="margin-top:0;"><i class="fas fa-chart-pie me-1 text-primary"></i> Estado del Personal</h3>

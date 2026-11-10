@@ -38,9 +38,7 @@ def consultar_disponibilidad(fecha=None):
     """Calcula la disponibilidad de cada funcionario para la fecha indicada."""
     fecha = fecha or date.today()
 
-    trabajadores = Trabajador.objects.select_related("cargo").order_by(
-        "apellido", "nombre"
-    )
+    trabajadores = Trabajador.objects.order_by("apellido", "nombre")
 
     en_vacaciones = set(
         SolicitudVacaciones.objects.filter(
@@ -84,7 +82,6 @@ def consultar_disponibilidad(fecha=None):
                 "apellido": trabajador.apellido,
                 "nombre_completo": str(trabajador),
                 "cedula": trabajador.cedula,
-                "cargo": trabajador.cargo.nombre if trabajador.cargo_id else None,
                 "disponible": disponible,
                 "estado_disponibilidad": estado,
                 "estado_disponibilidad_display": EstadoDisponibilidad.DISPLAY[estado],

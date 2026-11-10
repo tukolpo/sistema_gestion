@@ -19,8 +19,10 @@
   --color-burdeos-light: #A3C9EE;
   --color-rosa:          #DCEAFC;
   --color-rosa-light:    #EDF4FD;
-  --color-blanco:        #FFFFFF;
-  --color-gris-claro:    #F5F5F5;
+  --color-blanco:        #EEF1F6;   /* blanco suave: tarjetas, barra superior, paneles */
+  --color-gris-claro:    #E4E9F0;   /* fondo de página y filas alternas */
+  --color-campo:         #E6EBF2;   /* fondo de inputs, buscador y selects */
+  --color-fondo:         #D9E0EA;   /* fondo de la página (detrás de las tarjetas) */
   --color-gris-medio:    #E0E0E0;
   --color-gris-linea:    #D5D5D5;
   --color-texto:         #1A1A1A;
@@ -51,7 +53,7 @@ html { font-size: 15px; scroll-behavior: smooth; }
 body {
   font-family: var(--font-base);
   color: var(--color-texto);
-  background: var(--color-gris-claro);
+  background: var(--color-fondo);
   min-height: 100vh;
   line-height: 1.5;
 }
@@ -169,7 +171,7 @@ body {
   font-family: var(--font-base);
   font-size: .9rem;
   color: var(--color-texto);
-  background: var(--color-blanco);
+  background: var(--color-campo);
   outline: none;
   transition: var(--transition);
 }
@@ -180,6 +182,7 @@ body {
 }
 
 .form-input:focus {
+  background: var(--color-blanco);
   border-color: var(--color-burdeos);
   box-shadow: 0 0 0 3px rgba(109,0,33,.12);
 }
@@ -569,7 +572,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: var(--color-gris-claro);
+  background: var(--color-fondo);
 }
 
 /* ─── Topbar / Header ─────────────────────────────── */
@@ -602,7 +605,7 @@ body {
 .barra-busqueda {
   display: flex;
   align-items: center;
-  background: var(--color-blanco);
+  background: var(--color-campo);
   border: 1.5px solid var(--color-burdeos);
   border-radius: var(--radius-sm);
   padding: 8px 14px;
@@ -726,7 +729,7 @@ body {
   font-family: var(--font-base);
   font-size: .8rem;
   color: var(--color-texto);
-  background: var(--color-blanco);
+  background: var(--color-campo);
   cursor: pointer;
   transition: var(--transition);
   width: 100%;

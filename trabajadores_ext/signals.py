@@ -16,7 +16,6 @@ _CAMPOS_AUDITADOS = [
     ("email", "Email"),
     ("fecha_nacimiento", "Fecha de nacimiento"),
     ("fecha_ingreso", "Fecha de ingreso"),
-    ("cargo", "Cargo"),
     ("especialidad", "Especialidad"),
     ("notas_perfil", "Notas del perfil"),
 ]
@@ -47,7 +46,7 @@ def _guardar_estado_previo(sender, instance, **kwargs):
     if instance.pk:
         try:
             instance._snapshot_previo = Trabajador.objects.select_related(
-                "cargo", "especialidad"
+                "especialidad"
             ).get(pk=instance.pk)
         except Trabajador.DoesNotExist:
             instance._snapshot_previo = None

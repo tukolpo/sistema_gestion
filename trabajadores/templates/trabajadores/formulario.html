@@ -11,7 +11,7 @@
 
   /* Tarjeta de foto */
   .foto-card {
-    background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
+    background: var(--color-blanco); border: 1px solid #d3dae6; border-radius: 16px;
     padding: 24px 18px; text-align: center; position: sticky; top: 90px;
     box-shadow: 0 2px 8px rgba(15,23,42,.05);
   }
@@ -38,7 +38,7 @@
 
   /* Secciones */
   .seccion-card {
-    background: #fff; border: 1px solid #e3e8ef; border-radius: 16px;
+    background: var(--color-blanco); border: 1px solid #d3dae6; border-radius: 16px;
     padding: 22px 24px 24px; box-shadow: 0 2px 8px rgba(15,23,42,.05);
   }
   .seccion-cab { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid #eef2f7; }
@@ -58,12 +58,13 @@
   .campo .req { color: #dc2626; }
   .form-trabajador .campo .form-input {
     width: 100%; padding: 11px 14px; border: 1.5px solid #d5dbe5; border-radius: 10px;
-    background: #fff; font-size: .9rem; color: #0f172a; border-radius: 10px;
+    background: var(--color-campo); font-size: .9rem; color: #0f172a; border-radius: 10px;
     box-shadow: none; transition: border-color .15s ease, box-shadow .15s ease;
   }
   .form-trabajador .campo .form-input::placeholder { color: #94a3b8; }
   .form-trabajador .campo .form-input:hover { border-color: #b6c0cf; }
   .form-trabajador .campo .form-input:focus {
+    background: var(--color-blanco);
     outline: none; border-color: var(--color-burdeos);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-burdeos) 22%, transparent);
   }
@@ -87,7 +88,7 @@
   }
   .btn-prim { background: var(--color-burdeos); color: #fff; }
   .btn-prim:hover { background: var(--color-burdeos-dark); transform: translateY(-1px); }
-  .btn-sec { background: #fff; color: #475569; border-color: #d5dbe5; }
+  .btn-sec { background: var(--color-campo); color: #475569; border-color: #d5dbe5; }
   .btn-sec:hover { background: #f1f5f9; }
 
   @media (max-width: 820px) {
@@ -152,7 +153,7 @@
           {% if form.cedula.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.cedula.errors.0 }}</p>{% endif %}
         </div>
         <div class="campo {% if form.fecha_nacimiento.errors %}tiene-error{% endif %}">
-          <label for="{{ form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+          <label for="{{ form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento <span class="req">*</span></label>
           {{ form.fecha_nacimiento }}
           {% if form.fecha_nacimiento.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.fecha_nacimiento.errors.0 }}</p>{% endif %}
         </div>
@@ -162,7 +163,7 @@
       <section class="seccion-card">
         <header class="seccion-cab">
           <span class="seccion-icono"><i class="fas fa-briefcase" aria-hidden="true"></i></span>
-          <div><h3>Datos laborales</h3><p>Ingreso, cargo y estado</p></div>
+          <div><h3>Datos laborales</h3><p>Ingreso y estado</p></div>
         </header>
         <div class="grid-2">
         <div class="campo {% if form.fecha_ingreso.errors %}tiene-error{% endif %}">
@@ -176,16 +177,6 @@
           {{ form.estado }}
           {% if form.estado.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.estado.errors.0 }}</p>{% endif %}
         </div>
-        <div class="campo {% if form.cargo.errors %}tiene-error{% endif %}">
-          <label for="{{ form.cargo.id_for_label }}">Cargo <span class="req">*</span></label>
-          {{ form.cargo }}
-          {% if form.cargo.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.cargo.errors.0 }}</p>{% endif %}
-        </div>
-        <div class="campo {% if form.especialidad.errors %}tiene-error{% endif %}">
-          <label for="{{ form.especialidad.id_for_label }}">Especialidad</label>
-          {{ form.especialidad }}
-          {% if form.especialidad.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.especialidad.errors.0 }}</p>{% endif %}
-        </div>
         </div>
       </section>
 
@@ -196,12 +187,12 @@
         </header>
         <div class="grid-2">
         <div class="campo {% if form.telefono.errors %}tiene-error{% endif %}">
-          <label for="{{ form.telefono.id_for_label }}">Teléfono</label>
+          <label for="{{ form.telefono.id_for_label }}">Teléfono <span class="req">*</span></label>
           {{ form.telefono }}
           {% if form.telefono.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.telefono.errors.0 }}</p>{% endif %}
         </div>
         <div class="campo {% if form.email.errors %}tiene-error{% endif %}">
-          <label for="{{ form.email.id_for_label }}">Correo electrónico</label>
+          <label for="{{ form.email.id_for_label }}">Correo electrónico <span class="req">*</span></label>
           {{ form.email }}
           {% if form.email.errors %}<p class="campo-error"><i class="fas fa-circle-exclamation" aria-hidden="true"></i> {{ form.email.errors.0 }}</p>{% endif %}
         </div>

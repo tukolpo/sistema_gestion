@@ -13,9 +13,8 @@ from usuarios.constants import NIVEL_GESTION_USUARIOS
 from usuarios.permissions import TieneJerarquiaMinima
 
 from trabajadores.filters import aplicar_filtros_trabajadores
-from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
+from trabajadores.models import DocumentoTrabajador, Especialidad, Trabajador
 from trabajadores.serializers import (
-    CargoSerializer,
     DocumentoTrabajadorSerializer,
     EspecialidadSerializer,
     TrabajadorEstadoSerializer,
@@ -29,12 +28,6 @@ class PermisoGestionTrabajadores(TieneJerarquiaMinima):
     nivel_requerido = NIVEL_GESTION_USUARIOS
 
 
-class CargoViewSet(viewsets.ModelViewSet):
-    queryset = Cargo.objects.all()
-    serializer_class = CargoSerializer
-    permission_classes = [IsAuthenticated, PermisoGestionTrabajadores]
-
-
 class EspecialidadViewSet(viewsets.ModelViewSet):
     queryset = Especialidad.objects.all()
     serializer_class = EspecialidadSerializer
@@ -42,7 +35,7 @@ class EspecialidadViewSet(viewsets.ModelViewSet):
 
 
 class TrabajadorViewSet(viewsets.ModelViewSet):
-    queryset = Trabajador.objects.select_related("cargo", "especialidad").prefetch_related(
+    queryset = Trabajador.objects.select_related("especialidad").prefetch_related(
         "documentos"
     )
     serializer_class = TrabajadorSerializer

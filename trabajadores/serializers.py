@@ -5,19 +5,13 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from trabajadores.antiguedad import MAYORIA_DE_EDAD, es_mayor_de_edad, texto_antiguedad
-from trabajadores.models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
+from trabajadores.models import DocumentoTrabajador, Especialidad, Trabajador
 from trabajadores.validators import (
     normalizar_cedula,
     validar_archivo_documento,
     validar_archivo_foto,
     validar_cedula_venezuela,
 )
-
-
-class CargoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cargo
-        fields = ("id", "nombre", "descripcion")
 
 
 class EspecialidadSerializer(serializers.ModelSerializer):
@@ -69,7 +63,6 @@ def calcular_antiguedad(fecha_ingreso):
 
 
 class TrabajadorSerializer(serializers.ModelSerializer):
-    cargo_nombre = serializers.CharField(source="cargo.nombre", read_only=True)
     especialidad_nombre = serializers.CharField(
         source="especialidad.nombre", read_only=True, allow_null=True
     )
@@ -88,8 +81,6 @@ class TrabajadorSerializer(serializers.ModelSerializer):
             "fecha_ingreso",
             "antiguedad",
             "departamento",
-            "cargo",
-            "cargo_nombre",
             "especialidad",
             "especialidad_nombre",
             "estado",
@@ -103,6 +94,11 @@ class TrabajadorSerializer(serializers.ModelSerializer):
             "documentos",
         )
         read_only_fields = ("fecha_creacion", "fecha_actualizacion")
+        extra_kwargs = {
+            "fecha_nacimiento": {"required": True, "allow_null": False},
+            "telefono": {"required": True, "allow_blank": False},
+            "email": {"required": True, "allow_blank": False},
+        }
 
     def get_antiguedad(self, obj):
         return calcular_antiguedad(obj.fecha_ingreso)
@@ -137,7 +133,6 @@ class TrabajadorSerializer(serializers.ModelSerializer):
 
 
 class TrabajadorListSerializer(serializers.ModelSerializer):
-    cargo_nombre = serializers.CharField(source="cargo.nombre", read_only=True)
     esta_activo = serializers.BooleanField(read_only=True)
     antiguedad = serializers.SerializerMethodField()
     antiguedad_texto = serializers.SerializerMethodField()
@@ -151,8 +146,6 @@ class TrabajadorListSerializer(serializers.ModelSerializer):
             "apellido",
             "cedula",
             "departamento",
-            "cargo",
-            "cargo_nombre",
             "estado",
             "estado_display",
             "esta_activo",

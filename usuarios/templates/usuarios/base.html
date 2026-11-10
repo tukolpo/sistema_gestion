@@ -68,12 +68,38 @@
         <i class="fas fa-house me-2" style="width: 20px; text-align: center;"></i> Inicio
       </a>
 
+      {% if puede_supervisar %}
+      {# Gestión de guardias: desplegable con las secciones de la pantalla #}
+      <div class="nav-grupo {% if ns == 'guardias' %}abierto{% endif %}">
+        <button type="button" class="nav-item nav-item-padre {% if ns == 'guardias' %}activo{% endif %}"
+                aria-expanded="{% if ns == 'guardias' %}true{% else %}false{% endif %}">
+          <span class="nav-item-texto">
+            <i class="fas fa-user-shield me-2" style="width: 20px; text-align: center;"></i> Guardias
+          </span>
+          <i class="fas fa-chevron-down nav-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="nav-submenu">
+          <a href="{% url 'guardias:gestion_guardias' %}?tab=disponible" data-tab-guardias="disponible"
+             class="nav-subitem {% if ns == 'guardias' and request.GET.tab != 'asignar' and request.GET.tab != 'cronograma' %}activo{% endif %}">
+            Personal disponible
+          </a>
+          <a href="{% url 'guardias:gestion_guardias' %}?tab=asignar" data-tab-guardias="asignar"
+             class="nav-subitem {% if ns == 'guardias' and request.GET.tab == 'asignar' %}activo{% endif %}">
+            Asignar turno
+          </a>
+          <a href="{% url 'guardias:gestion_guardias' %}?tab=cronograma" data-tab-guardias="cronograma"
+             class="nav-subitem {% if ns == 'guardias' and request.GET.tab == 'cronograma' %}activo{% endif %}">
+            Cronograma semanal
+          </a>
+        </div>
+      </div>
+      {% else %}
       <a href="{% url 'guardias:gestion_guardias' %}"
          class="nav-item {% if ns == 'guardias' %}activo{% endif %}"
          id="nav-guardias">
-        <i class="fas fa-user-shield me-2" style="width: 20px; text-align: center;"></i>
-        {% if puede_gestionar_usuarios %}Guardias{% else %}Mis Guardias{% endif %}
+        <i class="fas fa-user-shield me-2" style="width: 20px; text-align: center;"></i> Mis Guardias
       </a>
+      {% endif %}
 
       <div class="nav-grupo {% if ns == 'trabajadores' %}abierto{% endif %}">
         <button type="button" class="nav-item nav-item-padre {% if ns == 'trabajadores' %}activo{% endif %}"
@@ -146,7 +172,7 @@
       </div>
       {% endif %}
 
-      {% if puede_gestionar_usuarios %}
+      {% if es_administrador %}
       <div class="nav-grupo {% if ns == 'usuarios' and ruta == 'gestion_usuarios' or ns == 'usuarios' and ruta == 'crear_usuario' %}abierto{% endif %}">
         <button type="button"
                 class="nav-item nav-item-padre {% if ns == 'usuarios' and ruta == 'gestion_usuarios' or ns == 'usuarios' and ruta == 'crear_usuario' %}activo{% endif %}"

@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from .models import Cargo, DocumentoTrabajador, Especialidad, Trabajador
-
-
-@admin.register(Cargo)
-class CargoAdmin(admin.ModelAdmin):
-    search_fields = ("nombre",)
+from .models import DocumentoTrabajador, Especialidad, Trabajador
 
 
 @admin.register(Especialidad)
@@ -25,13 +20,12 @@ class TrabajadorAdmin(admin.ModelAdmin):
         "apellido",
         "nombre",
         "cedula",
-        "cargo",
         "especialidad",
         "departamento",
         "estado",
         "fecha_ingreso",
     )
-    list_filter = ("estado", "departamento", "cargo", "especialidad")
+    list_filter = ("estado", "departamento", "especialidad")
     search_fields = ("nombre", "apellido", "cedula", "email")
     ordering = ("apellido", "nombre")
     inlines = [DocumentoInline]

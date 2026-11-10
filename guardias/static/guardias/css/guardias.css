@@ -65,11 +65,11 @@
 }
 
 .disponibilidad-header {
-  grid-template-columns: 2fr 1fr 1.2fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
 }
 
 .tabla-fila.disponibilidad-fila {
-  grid-template-columns: 2fr 1fr 1.2fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
 }
 
 .disponibilidad-vacio,

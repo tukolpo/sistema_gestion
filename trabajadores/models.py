@@ -21,23 +21,6 @@ def _ruta_documento(instance, filename):
     )
 
 
-class Cargo(models.Model):
-    nombre = models.CharField(
-        max_length=100,
-        unique=True,
-        validators=[MinLengthValidator(2, "El nombre del cargo es demasiado corto.")],
-    )
-    descripcion = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Cargo"
-        verbose_name_plural = "Cargos"
-        ordering = ["nombre"]
-
-    def __str__(self):
-        return self.nombre
-
-
 class Especialidad(models.Model):
     nombre = models.CharField(
         max_length=100,
@@ -66,9 +49,6 @@ class Trabajador(models.Model):
     fecha_nacimiento = models.DateField(null=True, blank=True)
     fecha_ingreso = models.DateField(null=True, blank=True)
     departamento = models.CharField(max_length=100)
-    cargo = models.ForeignKey(
-        Cargo, on_delete=models.PROTECT, related_name="trabajadores"
-    )
     especialidad = models.ForeignKey(
         Especialidad,
         on_delete=models.SET_NULL,

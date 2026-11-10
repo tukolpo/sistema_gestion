@@ -5,30 +5,107 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ titulo }}</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f1f5f9; margin: 0; padding: 24px; }
-    .card { max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
-    h1 { font-size: 1.25rem; margin: 0 0 8px; color: #0f172a; }
-    .badge { display: inline-block; padding: 4px 12px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 0.85rem; font-weight: 600; }
-    dl { display: grid; grid-template-columns: 120px 1fr; gap: 8px 16px; margin: 20px 0 0; }
-    dt { color: #64748b; font-size: 0.85rem; }
-    dd { margin: 0; font-weight: 500; color: #1e293b; }
-    .footer { margin-top: 24px; font-size: 0.75rem; color: #94a3b8; text-align: center; }
+    :root {
+      --c-principal: #8b1a2b;
+      --c-oscuro: #5e1220;
+      --c-suave: #fdeceb;
+      --c-texto: #1e293b;
+      --c-gris: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 24px 16px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #f4f6fa 0%, #e9edf5 100%);
+      color: var(--c-texto);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      width: 100%; max-width: 420px; background: #fff;
+      border-radius: 20px; overflow: hidden;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, .14);
+    }
+    .cabecera {
+      background: linear-gradient(135deg, var(--c-oscuro), var(--c-principal));
+      color: #fff; text-align: center; padding: 28px 24px 56px;
+    }
+    .cabecera small {
+      display: block; font-size: .72rem; letter-spacing: .12em;
+      text-transform: uppercase; opacity: .85;
+    }
+    .cabecera h1 { margin: 6px 0 0; font-size: 1.15rem; font-weight: 700; }
+    .avatar {
+      width: 104px; height: 104px; margin: -52px auto 0;
+      border-radius: 50%; background: #fff; border: 4px solid #fff;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, .18);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; font-weight: 800; color: var(--c-principal);
+      background: var(--c-suave);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+    .avatar { overflow: hidden; }
+    .cuerpo { padding: 16px 28px 26px; text-align: center; }
+    .nombre { margin: 10px 0 8px; font-size: 1.4rem; font-weight: 800; text-transform: capitalize; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 999px;
+      background: #dcfce7; color: #166534; font-size: .82rem; font-weight: 700;
+    }
+    .badge::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%; background: #16a34a;
+    }
+    .badge-inactivo { background: #fee2e2; color: #991b1b; }
+    .badge-inactivo::before { background: #dc2626; }
+    .datos { margin: 22px 0 0; text-align: left; }
+    .dato {
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      padding: 13px 4px; border-top: 1px solid #eef1f6;
+    }
+    .dato dt { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--c-gris); }
+    .dato dd { margin: 0; font-weight: 600; text-align: right; overflow-wrap: anywhere; }
+    .pie {
+      background: #f8fafc; border-top: 1px solid #eef1f6;
+      padding: 14px 20px; text-align: center; font-size: .72rem; color: #94a3b8;
+    }
+    .pie strong { color: var(--c-gris); }
+    .pie code { display: block; margin-top: 4px; font-size: .7rem; font-family: inherit; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Verificación de identidad</h1>
-    <span class="badge">Personal activo</span>
-    <dl>
-      <dt>Nombre</dt><dd>{{ trabajador.nombre }} {{ trabajador.apellido }}</dd>
-      <dt>Cédula</dt><dd>{{ trabajador.cedula }}</dd>
-      <dt>Cargo</dt><dd>{{ trabajador.cargo }}</dd>
-      <dt>Departamento</dt><dd>{{ trabajador.departamento }}</dd>
-      {% if trabajador.especialidad %}
-      <dt>Especialidad</dt><dd>{{ trabajador.especialidad }}</dd>
+  <main class="card">
+    <header class="cabecera">
+      <small>Sistema de Gestión DSI</small>
+      <h1>Verificación de identidad</h1>
+    </header>
+
+    <div class="avatar">
+      {% if trabajador.foto %}
+      <img src="{% url 'trabajadores_ext:perfil_foto' token %}" alt="Foto de {{ trabajador.nombre }} {{ trabajador.apellido }}">
+      {% else %}
+      <span aria-hidden="true">{{ trabajador.nombre|slice:":1"|upper }}{{ trabajador.apellido|slice:":1"|upper }}</span>
       {% endif %}
-    </dl>
-    <p class="footer">Sistema de Gestión DSI · Token {{ token }}</p>
-  </div>
+    </div>
+
+    <section class="cuerpo">
+      <h2 class="nombre">{{ trabajador.nombre }} {{ trabajador.apellido }}</h2>
+      {% if trabajador.esta_activo %}
+      <span class="badge">Personal activo</span>
+      {% else %}
+      <span class="badge badge-inactivo">Personal inactivo</span>
+      {% endif %}
+
+      <dl class="datos">
+        <div class="dato"><dt>Cédula</dt><dd>{{ trabajador.cedula }}</dd></div>
+        <div class="dato"><dt>Fecha de ingreso</dt><dd>{{ trabajador.fecha_ingreso|date:"d/m/Y"|default:"—" }}</dd></div>
+        <div class="dato"><dt>Antigüedad</dt><dd>{{ antiguedad }}</dd></div>
+        <div class="dato"><dt>Estado</dt><dd>{% if trabajador.esta_activo %}Activo{% else %}Inactivo{% endif %}</dd></div>
+      </dl>
+    </section>
+
+    <footer class="pie">
+      <strong>{% if trabajador.esta_activo %}Identidad verificada{% else %}Persona registrada, sin vigencia activa{% endif %}</strong>
+      <code>Consulta realizada el {% now "d/m/Y H:i" %}</code>
+    </footer>
+  </main>
 </body>
 </html>

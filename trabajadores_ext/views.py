@@ -1,13 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.http import Http404, HttpResponse
+import mimetypes
+
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
+from usuarios.constants import NIVEL_ADMINISTRADOR
 from usuarios.decorators import requiere_jerarquia
 
+from trabajadores.antiguedad import texto_antiguedad
 from trabajadores.models import Trabajador
 from trabajadores_ext.auditoria import registrar
 from trabajadores_ext.models import AuditoriaTrabajador, EscaneoQR, TrabajadorTokenQR
@@ -22,10 +25,10 @@ def _ip(request):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
 def vista_credencial_qr(request, trabajador_id):
     trabajador = get_object_or_404(
-        Trabajador.objects.select_related("cargo", "especialidad"),
+        Trabajador.objects.select_related("especialidad"),
         pk=trabajador_id,
     )
     token_obj = obtener_token_qr(trabajador)
@@ -52,7 +55,7 @@ def vista_credencial_qr(request, trabajador_id):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
 def vista_qr_imagen(request, trabajador_id):
     trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
     token_obj = obtener_token_qr(trabajador)
@@ -66,14 +69,12 @@ def vista_qr_imagen(request, trabajador_id):
 def vista_perfil_publico(request, token):
     token_obj = get_object_or_404(
         TrabajadorTokenQR.objects.select_related(
-            "trabajador", "trabajador__cargo", "trabajador__especialidad"
+            "trabajador", "trabajador__especialidad"
         ),
         token=token,
         activo=True,
     )
     trabajador = token_obj.trabajador
-    if not trabajador.esta_activo:
-        raise Http404()
     EscaneoQR.objects.create(
         token_qr=token_obj,
         ip=_ip(request),
@@ -92,9 +93,32 @@ def vista_perfil_publico(request, token):
         {
             "trabajador": trabajador,
             "token": token,
+            "antiguedad": texto_antiguedad(trabajador.fecha_ingreso),
             "titulo": "Verificación de identidad",
         },
     )
+
+
+def vista_perfil_foto(request, token):
+    """Foto pública del trabajador, solo mientras su token QR esté activo."""
+    token_obj = get_object_or_404(
+        TrabajadorTokenQR.objects.select_related("trabajador"),
+        token=token,
+        activo=True,
+    )
+    foto = token_obj.trabajador.foto
+    if not foto:
+        raise Http404()
+    try:
+        archivo = foto.open("rb")
+    except (FileNotFoundError, OSError):
+        raise Http404()
+    respuesta = FileResponse(
+        archivo,
+        content_type=mimetypes.guess_type(foto.name)[0] or "application/octet-stream",
+    )
+    respuesta["Cache-Control"] = "private, max-age=300"
+    return respuesta
 
 
 # ─── Metadatos visuales por tipo de acción (icono + color) ───────────

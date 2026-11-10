@@ -5,7 +5,8 @@ from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django import forms
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.http import (
@@ -16,7 +17,7 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 import pandas as pd
 from reportlab.lib import colors
@@ -37,8 +38,10 @@ from usuarios.constants import NIVEL_ADMINISTRADOR, NIVEL_GESTION_USUARIOS
 from usuarios.decorators import requiere_jerarquia
 
 from .antiguedad import texto_antiguedad
+from .filters import aplicar_filtros_trabajadores
 from .forms import DocumentoTrabajadorForm, TrabajadorForm
-from .models import Cargo, DocumentoTrabajador, Trabajador
+from .models import DocumentoTrabajador, Trabajador
+from .validators import validar_archivo_foto
 from .utils import cambiar_estado_trabajador, trabajador_del_usuario
 
 
@@ -68,7 +71,7 @@ def lista_trabajadores(request):
             _contexto_base({"titulo": "Mi Perfil"}),
         )
 
-    trabajadores = Trabajador.objects.select_related("cargo", "especialidad")
+    trabajadores = Trabajador.objects.all()
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
 
@@ -89,7 +92,6 @@ def lista_trabajadores(request):
                 "trabajadores": trabajadores,
                 "busqueda": q,
                 "filtro_estado": estado,
-                "cargos": Cargo.objects.all(),
                 "titulo": "Gestión de Trabajadores",
             }
         ),
@@ -148,7 +150,7 @@ def detalle_trabajador(request, trabajador_id):
     (sin edición, sin subir documentos, sin cambiar estado).
     """
     trabajador = get_object_or_404(
-        Trabajador.objects.select_related("cargo", "especialidad"),
+        Trabajador.objects.all(),
         pk=trabajador_id,
     )
 
@@ -186,6 +188,8 @@ def detalle_trabajador(request, trabajador_id):
                 "documentos": trabajador.documentos.all(),
                 "doc_form": doc_form,
                 "es_supervisor": es_supervisor,
+                # La credencial QR queda solo para administradores.
+                "puede_ver_qr": request.user.tiene_rango_minimo(NIVEL_ADMINISTRADOR),
                 "titulo": f"Perfil — {trabajador}",
             }
         ),
@@ -286,6 +290,44 @@ def servir_foto(request, trabajador_id):
 
 
 @login_required
+@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@require_POST
+def cambiar_foto(request, trabajador_id):
+    """Cambia la foto de perfil desde el detalle del trabajador."""
+    trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
+    archivo = request.FILES.get("foto")
+    if not archivo:
+        messages.error(request, "Selecciona una imagen.")
+        return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+    try:
+        validar_archivo_foto(archivo)          # formato y peso
+        forms.ImageField().clean(archivo)      # que sea realmente una imagen
+    except ValidationError as e:
+        messages.error(request, e.messages[0])
+        return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+
+    if trabajador.foto:
+        trabajador.foto.delete(save=False)
+    trabajador.foto = archivo
+    trabajador.save()
+    messages.success(request, "Foto actualizada correctamente.")
+    return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+
+
+@login_required
+@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@require_POST
+def quitar_foto(request, trabajador_id):
+    trabajador = get_object_or_404(Trabajador, pk=trabajador_id)
+    if trabajador.foto:
+        trabajador.foto.delete(save=False)
+        trabajador.foto = None
+        trabajador.save()
+        messages.success(request, "Foto eliminada.")
+    return redirect("trabajadores:detalle", trabajador_id=trabajador.pk)
+
+
+@login_required
 def ver_documento(request, documento_id):
     """Visualización de documentos (3.3): supervisores/admins ven cualquiera;
     el resto de usuarios solo pueden ver documentos de su propio trabajador."""
@@ -329,7 +371,7 @@ def descargar_documento(request, documento_id):
 
 def perfil_publico_trabajador(request, trabajador_uuid):
     """Vista pública para verificar un trabajador mediante su código QR."""
-    trabajador = get_object_or_404(Trabajador.objects.select_related("cargo", "especialidad"), uuid=trabajador_uuid)
+    trabajador = get_object_or_404(Trabajador.objects.all(), uuid=trabajador_uuid)
     return render(
         request,
         "trabajadores/perfil_publico.html",
@@ -342,15 +384,16 @@ def perfil_publico_trabajador(request, trabajador_uuid):
 # ───────────────────────────────────────────────────────────
 
 COLUMNAS_EXPORT = {
-    "cedula": "Cédula", "nombre": "Nombre completo", "cargo": "Cargo",
-    "departamento": "Departamento", "estatus": "Estatus",
+    "cedula": "Cédula", "nombre": "Nombre completo",
+    "estatus": "Estatus",
     "fecha_ingreso": "Fecha de ingreso", "antiguedad": "Antigüedad",
 }
 ROLES_EXPORTACION = {"admin", "rrhh", "supervisor"}
 
 
 def _puede_exportar(user):
-    return user.is_superuser or user.groups.filter(name__in=ROLES_EXPORTACION).exists()
+    """Exporta quien gestiona trabajadores (supervisor, gerente, admin)."""
+    return _puede_gestionar(user)
 
 
 def _antiguedad_texto(fecha_ingreso):
@@ -361,49 +404,36 @@ def _qs_a_registros(qs):
     return [{
         "cedula": t.cedula,
         "nombre": f"{t.nombre} {t.apellido}",
-        "cargo": t.cargo.nombre if t.cargo else "—",
-        "departamento": t.departamento or "—",
         "estatus": t.get_estado_display(),
         "fecha_ingreso": t.fecha_ingreso.strftime("%d/%m/%Y") if t.fecha_ingreso else "—",
         "antiguedad": _antiguedad_texto(t.fecha_ingreso),
     } for t in qs]
 
 
+CLAVES_FILTRO = [
+    "q", "estatus", "antiguedad", "antiguedad_max",
+    "ingreso_desde", "ingreso_hasta", "documentos", "orden",
+]
+
+
 def _leer_filtros(request):
-    return {c: request.GET[c] for c in ["cargo", "departamento", "estatus", "antiguedad"] if request.GET.get(c)}
+    return {c: request.GET[c].strip() for c in CLAVES_FILTRO if request.GET.get(c, "").strip()}
 
 
 def _aplicar_filtros(filtros):
-    from django.utils import timezone
-    from datetime import timedelta
-    qs = Trabajador.objects.select_related("cargo")
-    if filtros.get("cargo"):         qs = qs.filter(cargo_id=filtros["cargo"])
-    if filtros.get("departamento"):  qs = qs.filter(departamento__icontains=filtros["departamento"])
-    if filtros.get("estatus"):       qs = qs.filter(estado=filtros["estatus"])
-    if filtros.get("antiguedad"):
-        hoy = timezone.now().date()
-        try:
-            años = int(filtros["antiguedad"])
-        except ValueError:
-            años = None
-        if años is not None:
-            qs = qs.filter(fecha_ingreso__lte=hoy - timedelta(days=365 * años))
-    return qs.order_by("apellido", "nombre")
+    """Mismos filtros que la lista en pantalla (trabajadores/filters.py)."""
+    return aplicar_filtros_trabajadores(Trabajador.objects.all(), filtros)
 
 
 def _nombre_archivo(filtros, ext):
     ts = datetime.now().strftime("%Y%m%d_%H%M")
-    partes = ["planilla"] + [filtros[k].replace(" ", "_").lower() for k in ["departamento", "estatus"] if filtros.get(k)] + [ts]
+    partes = ["planilla"] + [filtros[k].replace(" ", "_").lower() for k in ["estatus"] if filtros.get(k)] + [ts]
     return f"{'_'.join(partes)}.{ext}"
 
 
 def _titulo_export(filtros):
     partes = ["Planilla de Trabajadores"]
-    if filtros.get("departamento"): partes.append(f"– Depto.: {filtros['departamento']}")
-    if filtros.get("cargo"):
-        cargo_obj = Cargo.objects.filter(pk=filtros["cargo"]).first()
-        if cargo_obj:
-            partes.append(f"– Cargo: {cargo_obj.nombre}")
+    if filtros.get("q"):            partes.append(f"– Búsqueda: {filtros['q']}")
     if filtros.get("estatus"):      partes.append(f"– Estatus: {filtros['estatus']}")
     return " ".join(partes)
 
@@ -439,7 +469,9 @@ def exportar_excel(request):
         fila_tot = len(registros)+4
         ws.write(fila_tot, 0, f"Total: {len(registros)}", fmt_tot)
         for c in range(1, len(df.columns)): ws.write(fila_tot, c, "", fmt_tot)
-        for i, col in enumerate(df.columns): ws.set_column(i, i, min(max(len(col),10)+4, 40))
+        for i, col in enumerate(df.columns):
+            ancho = max([len(str(col))] + [len(str(x)) for x in df[col]]) + 4
+            ws.set_column(i, i, min(max(ancho, 12), 45))
         ws.set_row(3, 30)
         ws.freeze_panes(4, 0)
     buf.seek(0)

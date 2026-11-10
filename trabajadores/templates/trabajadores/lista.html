@@ -5,49 +5,20 @@
 {% block topbar_titulo %}Gestión de Trabajadores{% endblock %}
 
 {% block topbar_acciones %}
-<form id="form-filtros-trabajadores" role="search"
-  style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-
-  <select id="filtro-cargo" name="cargo" class="form-input select-rol" aria-label="Filtrar por cargo">
-    <option value="">Todos los cargos</option>
-    {% for c in cargos %}
-    <option value="{{ c.id }}">{{ c.nombre }}</option>
-    {% endfor %}
-  </select>
-
-  <select id="filtro-estatus" name="estatus" class="form-input select-rol" aria-label="Filtrar por estatus">
-    <option value="">Todos los estatus</option>
-    <option value="ACTIVO">Activos</option>
-    <option value="INACTIVO">Inactivos</option>
-  </select>
-
-  <label class="barra-busqueda" for="filtro-antiguedad" style="min-width:150px; display: flex; align-items: center; position: relative; margin-bottom: 0;">
-    <i class="fas fa-calendar-alt" style="position: absolute; left: 12px; color: var(--color-texto-suave, #6c757d); font-size: 0.85rem;" aria-hidden="true"></i>
-    <input type="number" id="filtro-antiguedad" name="antiguedad" min="0" step="1"
-      placeholder="Antigüedad (años)" class="form-input" style="width:100%; padding-left: 36px;"
-      aria-label="Antigüedad mínima en años">
-  </label>
-
-  <button type="button" id="btn-limpiar-filtros" class="btn-accion"
-    style="display:none;" aria-label="Limpiar filtros">
-    <i class="fas fa-times me-1"></i> Limpiar
+<div class="dropdown-exportar" style="position:relative; display:inline-block;">
+  <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false" style="padding: 8px 14px;">
+    <i class="fas fa-file-export me-1"></i> Exportar <i class="fas fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
   </button>
-
-  <div class="dropdown-exportar" style="position:relative; display:inline-block;">
-    <button type="button" id="btn-exportar" class="btn-accion" aria-haspopup="true" aria-expanded="false" style="padding: 8px 14px;">
-      <i class="fas fa-file-export me-1"></i> Exportar <i class="fas fa-chevron-down ms-1" style="font-size: 0.75rem;"></i>
-    </button>
-    <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 8px 20px rgba(15,23,42,0.12); min-width:150px; z-index:10; overflow:hidden;">
-      <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-excel text-success me-2"></i>Excel</a>
-      <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-csv text-info me-2"></i>CSV</a>
-      <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF</a>
-    </div>
+  <div id="menu-exportar" style="display:none; position:absolute; right:0; top:100%; background:var(--color-blanco); border:1px solid #ccd3de; border-radius:8px; box-shadow:0 8px 20px rgba(15,23,42,0.12); min-width:150px; z-index:10; overflow:hidden;">
+    <a href="#" class="btn-exportar-link" data-formato="excel" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-excel text-success me-2"></i>Excel</a>
+    <a href="#" class="btn-exportar-link" data-formato="csv" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-csv text-info me-2"></i>CSV</a>
+    <a href="#" class="btn-exportar-link" data-formato="pdf" style="display:block; padding:9px 14px; text-decoration:none; color:#333; font-size:0.88rem;"><i class="fas fa-file-pdf text-danger me-2"></i>PDF</a>
   </div>
+</div>
 
-  <a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar" style="padding: 8px 14px;">
-    <i class="fas fa-plus me-1"></i> Nuevo
-  </a>
-</form>
+<a href="{% url 'trabajadores:crear' %}" class="btn-accion btn-guardar" style="padding: 8px 14px;">
+  <i class="fas fa-plus me-1"></i> Nuevo
+</a>
 
 <script>
   (function () {
@@ -71,21 +42,19 @@
       btnExportar.setAttribute("aria-expanded", "false");
     });
 
+    // Exporta exactamente lo que se está filtrando en pantalla.
     document.querySelectorAll(".btn-exportar-link").forEach(function (link) {
       link.addEventListener("click", function (e) {
         e.preventDefault();
-        var formato = link.dataset.formato;
         var params = new URLSearchParams();
-
-        var cargo = document.getElementById("filtro-cargo").value;
-        var estatus = document.getElementById("filtro-estatus").value;
-        var antiguedad = document.getElementById("filtro-antiguedad").value;
-
-        if (cargo) params.set("cargo", cargo);
-        if (estatus) params.set("estatus", estatus);
-        if (antiguedad) params.set("antiguedad", antiguedad);
-
-        window.location.href = urlsExport[formato] + "?" + params.toString();
+        var form = document.getElementById("form-filtros-trabajadores");
+        if (form) {
+          Array.prototype.forEach.call(form.elements, function (c) {
+            var v = String(c.value || "").trim();
+            if (c.name && c.name !== "csrfmiddlewaretoken" && v) params.set(c.name, v);
+          });
+        }
+        window.location.href = urlsExport[link.dataset.formato] + "?" + params.toString();
       });
     });
   })();
@@ -94,13 +63,13 @@
 
 {% block extra_css %}
 <style>
-  .panel-area { background: #eef1f6; }
+  .panel-area { background: transparent; }
 
   select.select-rol {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #ffffff;
+    background-color: var(--color-campo);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
@@ -113,7 +82,6 @@
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
     width: auto;
-    background-color: #ffffff;
   }
   select.select-rol:hover { border-color: #b0d0ef; }
   select.select-rol:focus {
@@ -121,6 +89,51 @@
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
   }
+
+  /* ── Panel de filtros ── */
+  .filtros-panel {
+    background: var(--color-blanco); border: 1px solid #e4e9f2; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  }
+  .filtros-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 14px; }
+  .filtro-ancho { grid-column: span 2; }
+  .filtro-campo label { display: block; margin-bottom: 5px; font-size: .72rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: .3px; }
+  .filtros-panel .form-input, .filtros-panel select.select-rol { width: 100%; box-sizing: border-box; }
+  .filtros-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .btn-filtros {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 9px 16px; border-radius: 10px; font-size: .88rem; font-weight: 700;
+    background: var(--color-rosa-light); color: var(--color-burdeos-dark);
+    border: 1.5px solid var(--color-rosa); transition: filter .15s ease;
+  }
+  .btn-filtros:hover { filter: brightness(.96); }
+  .btn-filtros:focus-visible, .btn-limpiar-filtros:focus-visible { outline: 2px solid var(--color-burdeos); outline-offset: 2px; }
+  .filtros-contador {
+    min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+    background: var(--color-burdeos); color: #fff; font-size: .72rem; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .filtros-contador[hidden] { display: none; }
+  .filtros-chevron { font-size: .75rem; transition: transform .25s ease; }
+  .filtros-panel.abierto .filtros-chevron { transform: rotate(180deg); }
+  .btn-limpiar-filtros {
+    display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+    padding: 9px 16px; border-radius: 10px; font-size: .85rem; font-weight: 700;
+    background: var(--color-blanco); color: var(--color-burdeos);
+    border: 1.5px solid var(--color-burdeos);
+    transition: background .15s ease, color .15s ease;
+  }
+  .btn-limpiar-filtros:hover { background: var(--color-burdeos); color: #fff; }
+
+  /* Desplegable animado */
+  .filtros-cuerpo { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .28s ease; }
+  .filtros-panel.abierto .filtros-cuerpo { grid-template-rows: 1fr; }
+  .filtros-cuerpo-int { overflow: hidden; min-height: 0; visibility: hidden; transition: visibility 0s linear .28s; }
+  .filtros-panel.abierto .filtros-cuerpo-int { visibility: visible; transition-delay: 0s; }
+  .filtros-cuerpo-int .filtros-grid { padding: 16px 4px 4px; }
+  @media (prefers-reduced-motion: reduce) { .filtros-cuerpo, .filtros-chevron { transition: none; } }
+  @media (max-width: 560px) { .filtro-ancho { grid-column: auto; } }
 
   /* ── Stat cards ── */
   .stats-grid-trabajadores {
@@ -130,7 +143,7 @@
     margin-bottom: 20px;
   }
   .stat-card-tb {
-    background: #ffffff;
+    background: var(--color-blanco);
     border: 1px solid #e4e9f2;
     border-radius: 14px;
     padding: 16px;
@@ -164,13 +177,13 @@
   }
   #contenedor-tabla-trabajadores .tabla-header-row,
   #contenedor-tabla-trabajadores .tabla-fila {
-    grid-template-columns: 1.9fr 1.1fr 1.3fr 1.8fr 1fr 2.4fr;
+    grid-template-columns: 2fr 1.3fr 1.8fr 1fr 2.4fr;
   }
   #contenedor-tabla-trabajadores .tabla-fila {
     transition: background 0.12s ease;
   }
   #contenedor-tabla-trabajadores .tabla-fila:hover {
-    background: #f8fafc;
+    background: var(--color-campo);
   }
 
   /* ── Badges de estado con color real ── */
@@ -199,14 +212,14 @@
   .btn-fila-editar { background: #4a90e2; color: #ffffff; }
   .btn-fila-activar { background: #2b6b3a; color: #ffffff; }
   .btn-fila-desactivar { background: #8b1a2b; color: #ffffff; }
-  .btn-fila-eliminar { background: #ffffff; color: #b91c1c; border: 1.5px solid #fca5a5; }
+  .btn-fila-eliminar { background: var(--color-blanco); color: #b91c1c; border: 1.5px solid #fca5a5; }
   .btn-fila-eliminar:hover { background: #fef2f2; }
 
   /* ── Ventana de confirmación para eliminar ── */
   .modal-eliminar { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 16px; }
   .modal-eliminar[hidden] { display: none; }
   .modal-fondo { position: absolute; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(3px); }
-  .modal-caja { position: relative; width: min(440px, 100%); background: #fff; border-radius: 16px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+  .modal-caja { position: relative; width: min(440px, 100%); background: var(--color-blanco); border-radius: 16px; padding: 26px; box-shadow: 0 24px 60px rgba(0,0,0,.3); }
   .modal-caja h3 { margin: 0 0 6px; font-size: 1.15rem; color: #0f172a; display: flex; align-items: center; gap: 10px; }
   .modal-caja h3 i { color: #b91c1c; }
   .modal-persona { margin: 12px 0; padding: 10px 14px; background: #f8fafc; border: 1px solid #e3e8ef; border-radius: 10px; font-size: .9rem; }
@@ -226,6 +239,71 @@
 {% endblock %}
 
 {% block contenido %}
+
+<form id="form-filtros-trabajadores" class="filtros-panel" role="search" autocomplete="off">
+  <div class="filtros-barra">
+    <button type="button" id="btn-toggle-filtros" class="btn-filtros" aria-expanded="false" aria-controls="filtros-cuerpo">
+      <i class="fas fa-sliders" aria-hidden="true"></i> Filtros
+      <span class="filtros-contador" id="filtros-contador" hidden>0</span>
+      <i class="fas fa-chevron-down filtros-chevron" aria-hidden="true"></i>
+    </button>
+    <button type="button" id="btn-limpiar-filtros" class="btn-limpiar-filtros" style="display:none;" aria-label="Limpiar filtros">
+      <i class="fas fa-rotate-left" aria-hidden="true"></i> Limpiar filtros
+    </button>
+  </div>
+  <div class="filtros-cuerpo" id="filtros-cuerpo">
+    <div class="filtros-cuerpo-int">
+  <div class="filtros-grid">
+      <div class="filtro-campo filtro-ancho">
+        <label for="filtro-q">Buscar</label>
+        <input type="search" id="filtro-q" name="q" class="form-input" placeholder="Nombre, apellido o cédula">
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-estatus">Estatus</label>
+        <select id="filtro-estatus" name="estatus" class="form-input select-rol">
+          <option value="">Todos</option>
+          <option value="ACTIVO">Activos</option>
+          <option value="INACTIVO">Inactivos</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-antiguedad">Antigüedad mínima (años)</label>
+        <input type="number" id="filtro-antiguedad" name="antiguedad" min="0" step="1" class="form-input" placeholder="Ej. 2">
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-antiguedad-max">Antigüedad máxima (años)</label>
+        <input type="number" id="filtro-antiguedad-max" name="antiguedad_max" min="0" step="1" class="form-input" placeholder="Ej. 10">
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-desde">Ingreso desde</label>
+        <input type="date" id="filtro-desde" name="ingreso_desde" class="form-input">
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-hasta">Ingreso hasta</label>
+        <input type="date" id="filtro-hasta" name="ingreso_hasta" class="form-input">
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-docs">Documentos</label>
+        <select id="filtro-docs" name="documentos" class="form-input select-rol">
+          <option value="">Todos</option>
+          <option value="con">Con documentos</option>
+          <option value="sin">Sin documentos</option>
+        </select>
+      </div>
+      <div class="filtro-campo">
+        <label for="filtro-orden">Ordenar por</label>
+        <select id="filtro-orden" name="orden" class="form-input select-rol">
+          <option value="">Apellido (A-Z)</option>
+          <option value="nombre_desc">Apellido (Z-A)</option>
+          <option value="cedula">Cédula</option>
+          <option value="ingreso_antiguo">Más antiguos primero</option>
+          <option value="ingreso_reciente">Más recientes primero</option>
+        </select>
+      </div>
+    </div>
+    </div>
+  </div>
+</form>
 
 <div class="stats-grid-trabajadores" id="stats-trabajadores" hidden>
   <div class="stat-card-tb">
@@ -257,7 +335,6 @@
   <div class="tabla-header-row" role="row">
     <span><i class="fas fa-user me-1"></i> Trabajador</span>
     <span><i class="fas fa-id-card me-1"></i> Cédula</span>
-    <span><i class="fas fa-briefcase me-1"></i> Cargo</span>
     <span><i class="fas fa-clock me-1"></i> Antigüedad</span>
     <span><i class="fas fa-toggle-on me-1"></i> Estado</span>
     <span><i class="fas fa-sliders me-1"></i> Acciones</span>

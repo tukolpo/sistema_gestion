@@ -39,7 +39,6 @@
       <div class="tabla-header-row disponibilidad-header" role="row">
         <span role="columnheader"><i class="fas fa-user me-1"></i> Funcionario</span>
         <span role="columnheader"><i class="fas fa-id-card me-1"></i> Cédula</span>
-        <span role="columnheader"><i class="fas fa-briefcase me-1"></i> Cargo</span>
         <span role="columnheader"><i class="fas fa-circle-check me-1"></i> Estado</span>
       </div>
       <div class="tabla-body" id="tabla-disponibilidad-body" role="rowgroup">
@@ -177,7 +176,20 @@
       document.querySelectorAll(".tab-panel").forEach(function (panel) {
         panel.hidden = panel.dataset.panel !== destino;
       });
+
+      // La URL y el menú lateral siguen a la pestaña elegida
+      try { history.replaceState(null, "", "?tab=" + destino); } catch (e) {}
+      document.querySelectorAll(".nav-subitem[data-tab-guardias]").forEach(function (a) {
+        a.classList.toggle("activo", a.dataset.tabGuardias === destino);
+      });
     });
   });
+
+  // Abrir directamente la pestaña indicada en la URL (?tab=asignar, etc.)
+  var tabInicial = new URLSearchParams(window.location.search).get("tab");
+  if (tabInicial) {
+    var btnInicial = document.querySelector('.tab-btn[data-tab="' + tabInicial + '"]');
+    if (btnInicial) btnInicial.click();
+  }
 </script>
 {% endblock %}

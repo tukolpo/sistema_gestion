@@ -64,9 +64,6 @@
       '<div role="cell"><span class="celda-email">' +
       escaparHtml(funcionario.cedula) +
       "</span></div>" +
-      '<div role="cell"><span class="celda-email">' +
-      escaparHtml(funcionario.cargo || "—") +
-      "</span></div>" +
       '<div role="cell">' +
       '<span class="' +
       badgeClase +

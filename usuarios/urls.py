@@ -15,6 +15,7 @@ urlpatterns = [
     path('usuarios/', views.vista_gestion_usuarios, name='gestion_usuarios'),
     path('usuarios/nuevo/', views.vista_crear_usuario, name='crear_usuario'),
     path('usuarios/<int:usuario_id>/asignar-rol/', views.vista_asignar_rol, name='asignar_rol'),
+    path('usuarios/<int:usuario_id>/eliminar/', views.vista_eliminar_usuario, name='eliminar_usuario'),
 
     path(
         'password-reset/',

@@ -33,7 +33,7 @@
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #ffffff;
+    background-color: var(--color-campo, #f4f6f9);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236c757d' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
@@ -100,7 +100,7 @@
   }
 
   .modal-caja {
-    background: #ffffff;
+    background: var(--color-blanco, #fbf9f9);
     border-radius: 12px;
     width: 100%;
     max-width: 420px;
@@ -151,6 +151,18 @@
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15);
   }
+
+  /* Aviso de confirmación (toast) */
+  .toast-confirmacion {
+    position: fixed; top: 24px; right: 24px; z-index: 3000;
+    display: flex; align-items: center; gap: 10px;
+    background: #e6f7ec; color: #1e5a2e; border: 1px solid #b7e1c4;
+    border-radius: 10px; padding: 12px 18px; font-size: .9rem; font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    opacity: 0; transform: translateY(-10px); pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast-confirmacion.visible { opacity: 1; transform: translateY(0); }
 
   .modal-error-msg {
     display: none;
@@ -296,6 +308,11 @@
 
 </div>
 
+<div class="toast-confirmacion" id="toastConfirmacion" role="status" aria-live="polite">
+  <i class="fas fa-circle-check" aria-hidden="true"></i>
+  <span id="toastConfirmacionTexto"></span>
+</div>
+
 <!-- ══════ Modal de confirmación para eliminar usuario ══════ -->
 <div class="modal-overlay" id="modalEliminarUsuario" role="dialog" aria-modal="true" aria-labelledby="modalEliminarTitulo">
   <div class="modal-caja">
@@ -393,6 +410,7 @@
           }
 
           cerrarModalEliminarUsuario();
+          mostrarConfirmacion(body.mensaje || 'Usuario eliminado correctamente.');
         } else {
           errorDiv.innerText = body.error || 'Ocurrió un error al eliminar el usuario.';
           errorDiv.style.display = 'block';
@@ -417,6 +435,14 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') cerrarModalEliminarUsuario();
   });
+
+  function mostrarConfirmacion(texto) {
+    const t = document.getElementById('toastConfirmacion');
+    document.getElementById('toastConfirmacionTexto').innerText = texto;
+    t.classList.add('visible');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('visible'), 4000);
+  }
 
   function getCookieCSRF(name) {
     let cookieValue = null;

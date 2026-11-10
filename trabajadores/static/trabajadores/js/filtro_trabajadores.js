@@ -11,9 +11,6 @@
   function obtenerElementos() {
     return {
       form: document.getElementById("form-filtros-trabajadores"),
-      cargo: document.getElementById("filtro-cargo"),
-      estatus: document.getElementById("filtro-estatus"),
-      antiguedad: document.getElementById("filtro-antiguedad"),
       btnLimpiar: document.getElementById("btn-limpiar-filtros"),
       tbody: document.getElementById("tabla-trabajadores-body"),
       sinResultados: document.getElementById("mensaje-sin-resultados"),
@@ -25,25 +22,25 @@
     };
   }
 
+  // Todos los campos con "name" dentro del formulario son filtros.
+  function camposFiltro(els) {
+    return els.form ? Array.prototype.slice.call(els.form.elements).filter(function (c) {
+      return c.name && c.name !== "csrfmiddlewaretoken";
+    }) : [];
+  }
+
   function hayFiltrosActivos(els) {
-    return (
-      (els.cargo && els.cargo.value) ||
-      (els.estatus && els.estatus.value) ||
-      (els.antiguedad && els.antiguedad.value.trim() !== "")
-    );
+    return camposFiltro(els).some(function (c) {
+      return c.name !== "orden" && String(c.value).trim() !== "";
+    });
   }
 
   function construirParametros(els) {
     var params = new URLSearchParams();
-    if (els.cargo && els.cargo.value) {
-      params.set("cargo", els.cargo.value);
-    }
-    if (els.estatus && els.estatus.value) {
-      params.set("estatus", els.estatus.value);
-    }
-    if (els.antiguedad && els.antiguedad.value.trim() !== "") {
-      params.set("antiguedad", els.antiguedad.value.trim());
-    }
+    camposFiltro(els).forEach(function (c) {
+      var valor = String(c.value).trim();
+      if (valor !== "") params.set(c.name, valor);
+    });
     return params;
   }
 
@@ -106,9 +103,6 @@
       "</div>" +
       '<div><span class="celda-email">' +
       escaparHtml(trabajador.cedula) +
-      "</span></div>" +
-      '<div><span class="celda-email">' +
-      escaparHtml(trabajador.cargo_nombre) +
       "</span></div>" +
       '<div><span class="celda-email">' +
       antiguedad +
@@ -207,6 +201,7 @@
     if (els.btnLimpiar) {
       els.btnLimpiar.style.display = hayFiltrosActivos(els) ? "inline-flex" : "none";
     }
+    actualizarContador(els);
 
     mostrarCargando(els);
 
@@ -229,6 +224,25 @@
       });
   }
 
+  function actualizarContador(els) {
+    var badge = document.getElementById("filtros-contador");
+    if (!badge) return;
+    var n = camposFiltro(els).filter(function (c) {
+      return c.name !== "orden" && String(c.value).trim() !== "";
+    }).length;
+    badge.textContent = n;
+    badge.hidden = n === 0;
+  }
+
+  function inicializarDesplegable(els) {
+    var btn = document.getElementById("btn-toggle-filtros");
+    if (!btn || !els.form) return;
+    btn.addEventListener("click", function () {
+      var abierto = els.form.classList.toggle("abierto");
+      btn.setAttribute("aria-expanded", String(abierto));
+    });
+  }
+
   function programarBusqueda(els) {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(function () {
@@ -237,9 +251,7 @@
   }
 
   function limpiarFiltros(els) {
-    if (els.cargo) els.cargo.value = "";
-    if (els.estatus) els.estatus.value = "";
-    if (els.antiguedad) els.antiguedad.value = "";
+    camposFiltro(els).forEach(function (c) { c.value = ""; });
     buscarTrabajadores(els);
   }
 
@@ -294,23 +306,14 @@
     }
 
     ["change", "input"].forEach(function (evento) {
-      els.form.addEventListener(
-        evento,
-        function (ev) {
-          if (ev.target && ev.target.id === "filtro-antiguedad" && evento === "change") {
-            return;
-          }
-          programarBusqueda(els);
-        },
-        true
-      );
-    });
-
-    if (els.antiguedad) {
-      els.antiguedad.addEventListener("change", function () {
+      els.form.addEventListener(evento, function () {
         programarBusqueda(els);
       });
-    }
+    });
+    els.form.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      programarBusqueda(els);
+    });
 
     if (els.btnLimpiar) {
       els.btnLimpiar.addEventListener("click", function () {
@@ -318,6 +321,7 @@
       });
     }
 
+    inicializarDesplegable(els);
     inicializarModalEliminar(els);
     buscarTrabajadores(els);
   }

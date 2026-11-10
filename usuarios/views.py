@@ -97,7 +97,7 @@ def vista_dashboard(request):
             "total_trabajadores": total_trabajadores,
             "activos": activos,
             "inactivos": total_trabajadores - activos,
-            "personal_por_cargo": Trabajador.objects.values("cargo__nombre")
+            "personal_por_cargo": Trabajador.objects.values("especialidad__nombre")
                 .annotate(total=Count("id")).order_by("-total"),
             "vacaciones_pendientes": SolicitudVacaciones.objects.filter(
                 estado=SolicitudVacaciones.Estado.PENDIENTE
@@ -133,7 +133,7 @@ def vista_sin_permisos(request, exception=None):
 
 
 @login_required
-@requiere_jerarquia(nivel_minimo=NIVEL_GESTION_USUARIOS)
+@requiere_jerarquia(nivel_minimo=NIVEL_ADMINISTRADOR)
 def vista_gestion_usuarios(request):
     usuarios = Usuario.objects.select_related("rol").all().order_by("username")
     q = request.GET.get("q", "").strip()
@@ -165,24 +165,34 @@ def vista_gestion_usuarios(request):
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)
 def vista_crear_usuario(request):
+    roles = roles_asignables(request.user)
+    error_password = ""
+
     if request.method == "POST":
         form = CrearUsuarioForm(
-            request.POST,
-            roles_disponibles=roles_asignables(request.user),
-            admin_user=request.user,
+            request.POST, roles_disponibles=roles, admin_user=request.user
         )
-        if form.is_valid():
+        admin_password = request.POST.get("admin_password", "")
+
+        # 1) La contraseña debe ser la del administrador logueado.
+        if not admin_password or not request.user.check_password(admin_password):
+            registrar_evento(request, SecurityLog.Accion.ACCESS_DENIED, user=request.user)
+            error_password = "Contraseña incorrecta."
+            messages.error(
+                request,
+                "Contraseña de administrador incorrecta. No se pudo autorizar el registro.",
+            )
+        # 2) Solo si la autorización es válida se valida y guarda el formulario.
+        elif form.is_valid():
             usuario = form.guardar()
             messages.success(request, f"Usuario {usuario.email} creado correctamente.")
             return redirect("usuarios:gestion_usuarios")
     else:
-        form = CrearUsuarioForm(
-            roles_disponibles=roles_asignables(request.user),
-            admin_user=request.user,
-        )
+        form = CrearUsuarioForm(roles_disponibles=roles, admin_user=request.user)
 
     return render(request, "usuarios/crear_usuario.html", {
         "form": form,
+        "error_password": error_password,
         "titulo": "Nuevo Usuario",
         "seccion_activa": "gestion_usuarios",
         "subseccion_activa": "crear_usuario",
@@ -197,9 +207,6 @@ def vista_asignar_rol(request, usuario_id):
 
     usuario_obj = get_object_or_404(Usuario, pk=usuario_id)
 
-    # No permitir que nadie —ni siquiera un superusuario o el administrador—
-    # se cambie el rol a sí mismo. Evita bloqueos accidentales y auto-escaladas
-    # de privilegios. Mismo criterio que el bloqueo de auto-eliminación de abajo.
     if usuario_obj.pk == request.user.pk:
         return JsonResponse(
             {"error": "No puedes cambiar tu propio rol."},
@@ -251,10 +258,6 @@ def vista_asignar_rol(request, usuario_id):
 @login_required
 @requiere_jerarquia(nivel_minimo=NIVEL_ASIGNAR_ROLES)
 def vista_eliminar_usuario(request, usuario_id):
-    """
-    Elimina un usuario. Requiere que el admin logueado reingrese
-    su PROPIA contraseña como confirmación (no la del usuario a eliminar).
-    """
     if request.method != "POST":
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
@@ -266,7 +269,6 @@ def vista_eliminar_usuario(request, usuario_id):
             status=400,
         )
 
-    # 1. Verifica la contraseña del usuario que está logueado AHORA (request.user)
     if not request.user.check_password(password):
         registrar_evento(request, SecurityLog.Accion.ACCESS_DENIED, user=request.user)
         return JsonResponse(
@@ -276,21 +278,18 @@ def vista_eliminar_usuario(request, usuario_id):
 
     usuario_obj = get_object_or_404(Usuario, pk=usuario_id)
 
-    # 2. No permitir que el admin se elimine a sí mismo
     if usuario_obj.pk == request.user.pk:
         return JsonResponse(
             {"success": False, "error": "No puedes eliminar tu propio usuario."},
             status=400,
         )
 
-    # 3. Un no-superusuario no puede eliminar a un superusuario
     if usuario_obj.is_superuser and not request.user.is_superuser:
         return JsonResponse(
             {"success": False, "error": "No tienes permisos para eliminar a un superusuario."},
             status=403,
         )
 
-    # 4. Un admin no puede eliminar a alguien de su mismo nivel jerárquico o superior
     if not request.user.is_superuser and nivel_usuario(usuario_obj) >= nivel_usuario(request.user):
         return JsonResponse(
             {"success": False, "error": "No puedes eliminar a un usuario de tu mismo nivel o superior."},

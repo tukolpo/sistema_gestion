@@ -7,7 +7,6 @@ class DisponibilidadFuncionarioSerializer(serializers.Serializer):
     apellido = serializers.CharField()
     nombre_completo = serializers.CharField()
     cedula = serializers.CharField()
-    cargo = serializers.CharField(allow_null=True)
     disponible = serializers.BooleanField()
     estado_disponibilidad = serializers.CharField()
     estado_disponibilidad_display = serializers.CharField()

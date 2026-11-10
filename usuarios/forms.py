@@ -1,4 +1,3 @@
-
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
@@ -47,14 +46,6 @@ class LoginForm(AuthenticationForm):
             'placeholder': 'Contraseña',
             'autocomplete': 'current-password',
             'aria-label': 'Contraseña',
-        })
-    )
-    remember_me = forms.BooleanField(
-        required=False,
-        label='Recordar contraseña',
-        widget=forms.CheckboxInput(attrs={
-            'id': 'id_remember_me',
-            'class': 'form-checkbox',
         })
     )
 
@@ -115,10 +106,6 @@ from usuarios.models import Usuario, Rol
 
 
 class CrearUsuarioForm(forms.Form):
-    password_confirmacion_admin = forms.CharField(
-        label="Tu contraseña (para confirmar esta acción)",
-        widget=forms.PasswordInput(attrs={"class": "form-input"}),
-    )
     email = forms.EmailField(
         label="Correo Electrónico",
         widget=forms.EmailInput(attrs={"class": "form-input"}),

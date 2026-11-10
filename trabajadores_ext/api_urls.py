@@ -1,12 +1,17 @@
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from trabajadores_ext.api_views import AuditoriaTrabajadorViewSet, TrabajadorQRViewSet
+from trabajadores_ext import views
 
-router = DefaultRouter()
-router.register("auditoria", AuditoriaTrabajadorViewSet, basename="auditoria")
-router.register("qr", TrabajadorQRViewSet, basename="qr")
+app_name = "trabajadores_ext"
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("auditoria/", views.vista_auditoria, name="auditoria"),
+    path("publico/<uuid:token>/", views.vista_perfil_publico, name="perfil_publico"),
+    path("publico/<uuid:token>/foto/", views.vista_perfil_foto, name="perfil_foto"),
+    path("<int:trabajador_id>/qr/", views.vista_credencial_qr, name="credencial_qr"),
+    path(
+        "<int:trabajador_id>/qr/imagen/",
+        views.vista_qr_imagen,
+        name="qr_imagen",
+    ),
 ]

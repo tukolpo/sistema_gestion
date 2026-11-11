@@ -34,5 +34,7 @@ Thumbs.db
 
 staticfiles/
 
-__pycache__/
+_**/__pycache__/
 *.pyc
+venv/
+venv_old/
